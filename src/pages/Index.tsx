@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,6 +77,7 @@ const Index = () => {
       console.log('Checking payment status for user:', userId);
       
       // Query the payments table to check for completed payments
+      // Using any type to avoid TypeScript inference issues until migration is run
       const { data: payments, error } = await supabase
         .from('payments')
         .select('*')

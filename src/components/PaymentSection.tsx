@@ -16,6 +16,11 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paypalEmail, setPaypalEmail] = useState("");
 
+  const clearPaymentData = () => {
+    localStorage.removeItem('paypal_order_id');
+    localStorage.removeItem('payment_session_token');
+  };
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -24,6 +29,9 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
       return;
     }
 
+    // Clear any existing payment data before starting new payment
+    clearPaymentData();
+    
     setIsProcessing(true);
     console.log('Starting PayPal payment process...');
 
@@ -42,13 +50,17 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
       
       console.log('User authenticated:', session.user.id);
 
-      // Create PayPal order
-      console.log('Calling create-paypal-order function...');
+      // Create PayPal order with timestamp to ensure uniqueness
+      const paymentData = {
+        paypalEmail: paypalEmail || undefined,
+        timestamp: Date.now(),
+        userId: session.user.id
+      };
+      
+      console.log('Calling create-paypal-order function with data:', paymentData);
       
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-paypal-order', {
-        body: { 
-          paypalEmail: paypalEmail || undefined 
-        }
+        body: paymentData
       });
 
       console.log('Response received from create-paypal-order:', { orderData, orderError });
@@ -81,6 +93,7 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
       // Store order ID and session info for later verification
       localStorage.setItem('paypal_order_id', orderData.orderId);
       localStorage.setItem('payment_session_token', session.access_token);
+      localStorage.setItem('payment_user_id', session.user.id);
       
       console.log('Stored payment data, redirecting to PayPal...');
       console.log('Approval URL:', orderData.approvalUrl);
@@ -100,8 +113,7 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
       toast.error(errorMessage);
       
       // Clean up stored data on error
-      localStorage.removeItem('paypal_order_id');
-      localStorage.removeItem('payment_session_token');
+      clearPaymentData();
     }
   };
 

@@ -31,11 +31,13 @@ const PaymentSuccess = () => {
 
         // Get stored order ID and verify it matches
         const storedOrderId = localStorage.getItem('paypal_order_id');
-        console.log('Stored order ID:', storedOrderId, 'Token from URL:', token);
+        const storedUserId = localStorage.getItem('payment_user_id');
+        
+        console.log('Stored payment data:', { storedOrderId, storedUserId, urlToken: token });
 
         if (storedOrderId && storedOrderId !== token) {
-          console.error('Order ID mismatch');
-          throw new Error('Payment verification failed');
+          console.error('Order ID mismatch - stored:', storedOrderId, 'from URL:', token);
+          throw new Error('Payment verification failed - order mismatch');
         }
 
         // Get session
@@ -45,11 +47,21 @@ const PaymentSuccess = () => {
           throw new Error('Authentication expired. Please log in again.');
         }
 
+        // Verify user matches stored user ID
+        if (storedUserId && storedUserId !== session.user.id) {
+          console.error('User ID mismatch - stored:', storedUserId, 'current:', session.user.id);
+          throw new Error('Payment verification failed - user mismatch');
+        }
+
         console.log('Capturing payment for order:', token);
 
-        // Capture the payment
+        // Capture the payment with additional verification data
         const { data: captureData, error: captureError } = await supabase.functions.invoke('capture-paypal-payment', {
-          body: { orderId: token }
+          body: { 
+            orderId: token,
+            payerId: payerId,
+            userId: session.user.id
+          }
         });
 
         if (captureError) {
@@ -72,6 +84,7 @@ const PaymentSuccess = () => {
           // Clean up stored data
           localStorage.removeItem('paypal_order_id');
           localStorage.removeItem('payment_session_token');
+          localStorage.removeItem('payment_user_id');
           
           // Redirect to home after 2 seconds to give user time to see success message
           setTimeout(() => {
@@ -90,6 +103,7 @@ const PaymentSuccess = () => {
         // Clean up stored data
         localStorage.removeItem('paypal_order_id');
         localStorage.removeItem('payment_session_token');
+        localStorage.removeItem('payment_user_id');
       } finally {
         setIsProcessing(false);
       }

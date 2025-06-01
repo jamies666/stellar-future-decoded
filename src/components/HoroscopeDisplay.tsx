@@ -1,0 +1,154 @@
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Stars, Heart, DollarSign, Briefcase, Download, Mail } from "lucide-react";
+import { toast } from "sonner";
+
+interface HoroscopeDisplayProps {
+  zodiacSign: string;
+}
+
+const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
+  const [horoscope, setHoroscope] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(true);
+
+  useEffect(() => {
+    // Simulate horoscope generation - replace with actual ChatGPT API call
+    setIsGenerating(true);
+    setTimeout(() => {
+      setHoroscope({
+        general: `As a ${zodiacSign}, the cosmic energies are particularly aligned in your favor this period. The universe is whispering secrets of transformation and growth, urging you to embrace the changes coming your way. Your natural strengths are being amplified by celestial forces, creating opportunities for profound personal development.`,
+        love: `Venus is dancing through your romantic sector, bringing passionate energies and deep emotional connections. For ${zodiacSign} individuals, this is a time of heart-opening experiences. Single? The universe is preparing to introduce someone who resonates with your soul's frequency. Partnered? Expect your relationship to reach new depths of intimacy and understanding.`,
+        career: `Jupiter's expansive energy is illuminating your professional path, dear ${zodiacSign}. Your career sector is buzzing with potential and possibility. This is an excellent time to showcase your talents and step into leadership roles. Trust your instincts when making important business decisions - the stars are guiding you toward success.`,
+        finances: `Mercury's influence on your financial sector suggests a period of smart money management and unexpected opportunities. For ${zodiacSign}, this is a time to be both practical and optimistic about your resources. Consider investments that align with your values, and don't be surprised if a new income stream presents itself.`,
+      });
+      setIsGenerating(false);
+    }, 3000);
+  }, [zodiacSign]);
+
+  const handleEmailReading = () => {
+    toast.success("Your horoscope has been sent to your email!");
+  };
+
+  const handleDownloadPDF = () => {
+    toast.success("Downloading your personalized horoscope PDF...");
+  };
+
+  if (isGenerating) {
+    return (
+      <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+        <CardContent className="p-8 text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            Consulting the Stars...
+          </h3>
+          <p className="text-purple-200">
+            The universe is crafting your personalized {zodiacSign} reading
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-400/30 backdrop-blur-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-white flex items-center justify-center gap-2">
+            <Stars className="h-6 w-6 text-yellow-400" />
+            Your {zodiacSign} Horoscope
+          </CardTitle>
+          <p className="text-purple-200">Generated with cosmic AI wisdom</p>
+        </CardHeader>
+      </Card>
+
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 bg-purple-900/50">
+          <TabsTrigger value="general" className="text-white">
+            <Stars className="h-4 w-4 mr-1" />
+            General
+          </TabsTrigger>
+          <TabsTrigger value="love" className="text-white">
+            <Heart className="h-4 w-4 mr-1" />
+            Love
+          </TabsTrigger>
+          <TabsTrigger value="career" className="text-white">
+            <Briefcase className="h-4 w-4 mr-1" />
+            Career
+          </TabsTrigger>
+          <TabsTrigger value="finances" className="text-white">
+            <DollarSign className="h-4 w-4 mr-1" />
+            Money
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general">
+          <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-semibold text-white mb-4">General Forecast</h3>
+              <p className="text-purple-100 leading-relaxed">{horoscope.general}</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="love">
+          <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                <Heart className="h-5 w-5 text-pink-400" />
+                Love & Relationships
+              </h3>
+              <p className="text-purple-100 leading-relaxed">{horoscope.love}</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="career">
+          <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-blue-400" />
+                Career & Professional Life
+              </h3>
+              <p className="text-purple-100 leading-relaxed">{horoscope.career}</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="finances">
+          <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-green-400" />
+                Financial Outlook
+              </h3>
+              <p className="text-purple-100 leading-relaxed">{horoscope.finances}</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <div className="flex gap-4">
+        <Button
+          onClick={handleEmailReading}
+          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+        >
+          <Mail className="mr-2 h-4 w-4" />
+          Email Reading
+        </Button>
+        <Button
+          onClick={handleDownloadPDF}
+          variant="outline"
+          className="flex-1 border-purple-400 text-white hover:bg-purple-900/50"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Download PDF
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default HoroscopeDisplay;

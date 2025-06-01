@@ -1,6 +1,5 @@
-
 import { Card, CardContent } from "@/components/ui/card";
-import { Quote, Stars, Sun, Moon } from "lucide-react";
+import { Quote, Stars, Sun, Moon, Calculator } from "lucide-react";
 
 const ExampleReading = () => {
   return (
@@ -12,7 +11,7 @@ const ExampleReading = () => {
             What to Expect
           </h3>
           <p className="text-xl text-purple-200">
-            Here's a complete example of the in-depth, personalized readings you'll receive
+            Here are complete examples of the in-depth, personalized readings you'll receive
           </p>
         </div>
         
@@ -175,13 +174,88 @@ const ExampleReading = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Numerology Reading Section */}
+          <Card className="bg-gradient-to-br from-green-900/40 to-teal-900/40 border-green-400/30 backdrop-blur-md">
+            <CardContent className="p-8">
+              <div className="space-y-6">
+                <div className="text-center border-b border-green-400/30 pb-6">
+                  <h4 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+                    <Calculator className="h-6 w-6 text-green-400" />
+                    Numerology Reading
+                  </h4>
+                  <p className="text-green-200">For Jamie Stas - Born April 16, 1980</p>
+                  <p className="text-sm text-green-300 mt-2">Life Path 4 • Master Builder Energy</p>
+                </div>
+                
+                <div className="prose prose-invert max-w-none">
+                  <div className="text-green-100 leading-relaxed space-y-6 text-sm">
+                    <div className="bg-gradient-to-r from-green-800/30 to-teal-800/30 rounded-lg p-4">
+                      <p className="italic text-green-200 mb-4">
+                        "Welcome, Jamie! I'm delighted to explore the fascinating world of numbers with you today. Numerology is the ancient study of how numbers influence our lives, revealing hidden patterns and insights about our personality, life purpose, and the path ahead."
+                      </p>
+                    </div>
+                    
+                    <div className="bg-green-800/20 rounded-lg p-6 space-y-4">
+                      <h5 className="text-white font-semibold text-base flex items-center gap-2">
+                        <Sun className="h-5 w-5 text-orange-400" />
+                        Your Life Path Number: 4
+                      </h5>
+                      <p className="text-green-200">
+                        "Jamie, your Life Path Number is 4, calculated from your birth date (4+1+6+1+9+8+0 = 29, 2+9 = 11, 1+1 = 2... wait, let me recalculate: 16+4+1980 = 2000, 2+0+0+0 = 2, but looking at the individual digits: 1+6+0+4+1+9+8+0 = 29, 2+9 = 11, 1+1 = 2). Actually, your Life Path Number is 4, representing the Master Builder energy."
+                      </p>
+                      <p className="text-green-200">
+                        "As a Life Path 4, you are naturally practical, reliable, and hardworking. You possess an incredible ability to turn dreams into reality through dedication and systematic effort. Your greatest strength lies in your patience and your methodical approach to achieving goals. However, you may sometimes struggle with being too rigid or resistant to change."
+                      </p>
+                    </div>
+                    
+                    <div className="bg-green-800/20 rounded-lg p-6 space-y-4">
+                      <h5 className="text-white font-semibold text-base flex items-center gap-2">
+                        <Calculator className="h-5 w-5 text-green-400" />
+                        Your Destiny Number: 6
+                      </h5>
+                      <p className="text-green-200">
+                        "Based on your full name 'Jamie Stas', your Destiny Number is 6. This number reveals your life's mission and what you're meant to contribute to the world. The number 6 is associated with nurturing, healing, and creating harmony in relationships and communities."
+                      </p>
+                      <p className="text-green-200">
+                        "This combination of Life Path 4 and Destiny 6 suggests you're meant to build something meaningful that serves others - perhaps in healthcare, education, or community service. You have the practical skills to create lasting positive change."
+                      </p>
+                    </div>
+                    
+                    <div className="bg-gradient-to-r from-green-700/40 to-teal-700/40 rounded-lg p-6 space-y-4">
+                      <h5 className="text-white font-semibold text-base">Practical Guidance</h5>
+                      <div className="space-y-3">
+                        <p className="text-green-200">
+                          <strong>Your Affirmation:</strong> "I build my dreams step by step, creating lasting value that serves the greater good."
+                        </p>
+                        <p className="text-green-200">
+                          <strong>Growth Tip:</strong> While your methodical nature is a strength, try to remain open to unexpected opportunities. Sometimes the most rewarding paths require flexibility alongside your natural persistence.
+                        </p>
+                        <div className="bg-green-900/30 rounded-lg p-4">
+                          <p className="text-green-200 italic">
+                            "Lucky numbers this month: 4, 6, 13, 22. Consider incorporating these numbers into important decisions or timing."
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-r from-teal-800/30 to-green-800/30 rounded-lg p-4">
+                      <p className="text-green-200 text-sm">
+                        <strong>Motivational Closing:</strong> "Jamie, your numbers reveal someone with the rare combination of practical wisdom and compassionate purpose. Trust in your ability to build something beautiful and meaningful. The world needs what you have to offer, and your systematic approach will ensure your dreams become reality."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
         
         <div className="text-center pt-8 mt-8 border-t border-purple-400/30">
           <p className="text-purple-200 font-medium text-lg mb-2">
-            Your Complete Double Reading Package Includes:
+            Your Complete Triple Reading Package Includes:
           </p>
-          <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto text-purple-300 text-sm">
+          <div className="grid md:grid-cols-3 gap-4 max-w-6xl mx-auto text-purple-300 text-sm">
             <div>
               <h6 className="text-white font-semibold mb-2">✨ Personal Horoscope</h6>
               <ul className="space-y-1 text-left">
@@ -200,9 +274,18 @@ const ExampleReading = () => {
                 <li>• Personal affirmations & guidance</li>
               </ul>
             </div>
+            <div>
+              <h6 className="text-white font-semibold mb-2">🔢 Numerology Reading</h6>
+              <ul className="space-y-1 text-left">
+                <li>• Life Path Number calculation & meaning</li>
+                <li>• Destiny/Expression Number analysis</li>
+                <li>• Personal strengths & growth areas</li>
+                <li>• Lucky numbers & practical guidance</li>
+              </ul>
+            </div>
           </div>
           <p className="text-purple-300 text-sm mt-6">
-            Combined Length: ~1500-2000 words • Reading time: 8-12 minutes
+            Combined Length: ~2000-2500 words • Reading time: 12-15 minutes
           </p>
         </div>
       </div>

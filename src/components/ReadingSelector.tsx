@@ -3,9 +3,10 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Stars, Sparkles, User } from "lucide-react";
+import { Stars, Sparkles, User, Calculator } from "lucide-react";
 import PersonalizedReading from "./PersonalizedReading";
 import TarotReading from "./TarotReading";
+import NumerologyReading from "./NumerologyReading";
 
 interface ReadingSelectorProps {
   userProfile: {
@@ -33,7 +34,7 @@ const ReadingSelector = ({ userProfile }: ReadingSelectorProps) => {
       </Card>
 
       <Tabs defaultValue="personalized" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-purple-900/30 border border-purple-400/30">
+        <TabsList className="grid w-full grid-cols-3 bg-purple-900/30 border border-purple-400/30">
           <TabsTrigger 
             value="personalized" 
             className="data-[state=active]:bg-purple-700/50 data-[state=active]:text-white text-purple-200"
@@ -48,6 +49,13 @@ const ReadingSelector = ({ userProfile }: ReadingSelectorProps) => {
             <Sparkles className="mr-2 h-4 w-4" />
             Tarot Reading
           </TabsTrigger>
+          <TabsTrigger 
+            value="numerology" 
+            className="data-[state=active]:bg-purple-700/50 data-[state=active]:text-white text-purple-200"
+          >
+            <Calculator className="mr-2 h-4 w-4" />
+            Numerology
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="personalized" className="mt-6">
@@ -56,6 +64,10 @@ const ReadingSelector = ({ userProfile }: ReadingSelectorProps) => {
         
         <TabsContent value="tarot" className="mt-6">
           <TarotReading userProfile={userProfile} />
+        </TabsContent>
+        
+        <TabsContent value="numerology" className="mt-6">
+          <NumerologyReading userProfile={userProfile} />
         </TabsContent>
       </Tabs>
     </div>

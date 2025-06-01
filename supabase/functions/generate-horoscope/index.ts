@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -32,8 +31,87 @@ serve(async (req) => {
 
     console.log('OpenAI API key found, length:', openAIApiKey.length);
 
-    const { userProfile, isPersonalized, isTarot, tarotTheme, tarotQuestion } = await req.json();
-    console.log('Request data:', { userProfile, isPersonalized, isTarot, tarotTheme, tarotQuestion });
+    const { userProfile, isPersonalized, isTarot, isNumerology, tarotTheme, tarotQuestion } = await req.json();
+    console.log('Request data:', { userProfile, isPersonalized, isTarot, isNumerology, tarotTheme, tarotQuestion });
+
+    // Handle numerology reading
+    if (isNumerology && userProfile) {
+      console.log(`Generating numerology reading for ${userProfile.fullName}`);
+
+      const numerologyPrompt = `You are an expert numerologist, skilled in interpreting the meaning and influence of numbers in a person's life.  
+The client below has provided their date of birth ${userProfile.birthDate} and their full name ${userProfile.fullName}.
+
+Please generate a comprehensive, unique numerology reading that is personal, easy to understand, and insightful.  
+Include the following in your response:
+
+1. **Brief Introduction:**  
+   Welcome the client, mention their provided birth date and name, and explain what numerology is in a warm, engaging way.
+
+2. **Life Path Number:**  
+   - Calculate and explain their Life Path Number (based on the sum of the date of birth).
+   - Describe the personality traits, strengths, and potential challenges associated with this number.
+   - Make it specific to the client's journey.
+
+3. **Other Relevant Numbers:**  
+   Calculate the Destiny/Expression Number based on their full name, and briefly explain what this reveals about the client.
+
+4. **Practical Advice:**  
+   Give one or two actionable suggestions or affirmations tailored to their numerological profile, helping them harness their strengths and grow.
+
+5. **Motivational Closing:**  
+   End with a positive, empowering message that encourages the client to embrace their numerological path.
+
+**Important:**  
+- Explain calculations in a simple way, but focus more on meaning and practical insight than on math.
+- Be gentle, uplifting, and supportive in tone.
+- Do not give medical, legal, or financial advice.
+
+Begin the numerology reading now using the client's details. Make the response at least 300–400 words and unique for each client.`;
+
+      console.log('Making OpenAI API request for numerology reading');
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'user',
+              content: numerologyPrompt
+            }
+          ],
+          temperature: 0.8,
+          max_tokens: 1000,
+        }),
+      });
+
+      console.log('OpenAI API response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`OpenAI API error: ${response.status} - ${errorText}`);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('OpenAI API response data keys:', Object.keys(data));
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error('Unexpected OpenAI API response structure:', data);
+        throw new Error('Unexpected response structure from OpenAI API');
+      }
+      
+      const reading = data.choices[0].message.content;
+      console.log('Generated numerology reading length:', reading?.length);
+
+      return new Response(JSON.stringify({ reading }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Handle tarot reading
     if (isTarot && userProfile) {

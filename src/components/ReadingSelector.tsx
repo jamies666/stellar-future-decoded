@@ -16,6 +16,8 @@ interface ReadingSelectorProps {
 }
 
 const ReadingSelector = ({ userProfile }: ReadingSelectorProps) => {
+  console.log("ReadingSelector rendered with userProfile:", userProfile);
+  
   return (
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-400/30 backdrop-blur-md">

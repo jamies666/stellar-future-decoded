@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,7 +62,11 @@ const Index = () => {
   // Add this useEffect to log user state changes
   useEffect(() => {
     console.log("User state changed:", user);
-  }, [user]);
+  }, []);
+
+  useEffect(() => {
+    console.log("UserProfile state changed:", userProfile);
+  }, [userProfile]);
 
   const handleSignOut = async () => {
     console.log("Signing out user...");
@@ -71,6 +74,7 @@ const Index = () => {
   };
 
   const handleUserProfileSubmit = (profileData: any) => {
+    console.log("Profile submitted:", profileData);
     setUserProfile(profileData);
   };
 
@@ -80,7 +84,9 @@ const Index = () => {
 
   // Function to check if user can access content (paywall logic)
   const canAccessContent = () => {
-    return TESTING_MODE || hasPaid;
+    const canAccess = TESTING_MODE || hasPaid;
+    console.log("Can access content:", canAccess, "TESTING_MODE:", TESTING_MODE, "hasPaid:", hasPaid);
+    return canAccess;
   };
 
   if (loading) {
@@ -93,6 +99,8 @@ const Index = () => {
   }
 
   console.log("Rendering Index with user:", user ? "authenticated" : "not authenticated");
+  console.log("Current userProfile:", userProfile);
+  console.log("Can access content:", canAccessContent());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-900 relative overflow-hidden">
@@ -218,7 +226,14 @@ const Index = () => {
               </div>
               <div>
                 {canAccessContent() && userProfile && (
-                  <ReadingSelector userProfile={userProfile} />
+                  <>
+                    <div className="bg-green-500/20 border border-green-400/50 rounded-lg p-4 mb-4">
+                      <p className="text-green-200 text-sm">
+                        Debug: ReadingSelector should be visible below
+                      </p>
+                    </div>
+                    <ReadingSelector userProfile={userProfile} />
+                  </>
                 )}
               </div>
             </div>

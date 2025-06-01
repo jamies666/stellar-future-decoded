@@ -19,6 +19,9 @@ serve(async (req) => {
     const paypalClientId = Deno.env.get('PAYPAL_CLIENT_ID');
     const paypalClientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
 
+    console.log('PayPal Client ID exists:', !!paypalClientId);
+    console.log('PayPal Client Secret exists:', !!paypalClientSecret);
+
     if (!paypalClientId || !paypalClientSecret) {
       console.error('PayPal credentials not configured');
       return new Response(
@@ -30,26 +33,42 @@ serve(async (req) => {
       );
     }
 
+    // Ensure credentials are properly trimmed
+    const clientId = paypalClientId.trim();
+    const clientSecret = paypalClientSecret.trim();
+    
+    console.log('Using PayPal sandbox environment');
+    console.log('Client ID length:', clientId.length);
+    console.log('Client Secret length:', clientSecret.length);
+
     // Get access token from PayPal
+    const credentials = btoa(`${clientId}:${clientSecret}`);
+    console.log('Generated credentials for auth');
+
     const authResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${btoa(`${paypalClientId}:${paypalClientSecret}`)}`,
+        'Authorization': `Basic ${credentials}`,
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
       },
       body: 'grant_type=client_credentials',
     });
 
+    console.log('Auth response status:', authResponse.status);
+
     if (!authResponse.ok) {
       const errorText = await authResponse.text();
-      console.error('PayPal auth error:', errorText);
-      throw new Error(`PayPal authentication failed: ${authResponse.status}`);
+      console.error('PayPal auth error response:', errorText);
+      console.error('Auth response headers:', Object.fromEntries(authResponse.headers.entries()));
+      throw new Error(`PayPal authentication failed: ${authResponse.status} - ${errorText}`);
     }
 
     const authData = await authResponse.json();
     const accessToken = authData.access_token;
+    console.log('PayPal access token obtained successfully');
 
-    // Create PayPal order with updated price
+    // Create PayPal order
     const orderData = {
       intent: 'CAPTURE',
       purchase_units: [{
@@ -67,31 +86,45 @@ serve(async (req) => {
       }
     };
 
+    console.log('Creating PayPal order with data:', JSON.stringify(orderData, null, 2));
+
     const orderResponse = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify(orderData),
     });
 
+    console.log('Order response status:', orderResponse.status);
+
     if (!orderResponse.ok) {
       const errorText = await orderResponse.text();
-      console.error('PayPal order creation error:', errorText);
-      throw new Error(`PayPal order creation failed: ${orderResponse.status}`);
+      console.error('PayPal order creation error response:', errorText);
+      console.error('Order response headers:', Object.fromEntries(orderResponse.headers.entries()));
+      throw new Error(`PayPal order creation failed: ${orderResponse.status} - ${errorText}`);
     }
 
     const order = await orderResponse.json();
-    console.log('PayPal order created:', order.id);
+    console.log('PayPal order created successfully:', order.id);
 
     // Find the approval URL
     const approvalUrl = order.links.find((link: any) => link.rel === 'approve')?.href;
 
+    if (!approvalUrl) {
+      console.error('No approval URL found in order response:', order);
+      throw new Error('No approval URL found in PayPal order response');
+    }
+
+    console.log('Approval URL found:', approvalUrl);
+
     return new Response(
       JSON.stringify({ 
         orderId: order.id, 
-        approvalUrl 
+        approvalUrl,
+        success: true
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -101,7 +134,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in create-paypal-order function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'Internal server error',
+        success: false
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

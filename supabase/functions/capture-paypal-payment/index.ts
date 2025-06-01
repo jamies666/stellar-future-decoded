@@ -36,8 +36,8 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get access token from PayPal
-    const authResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    // Get access token from PayPal LIVE
+    const authResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${btoa(`${paypalClientId}:${paypalClientSecret}`)}`,
@@ -53,8 +53,8 @@ serve(async (req) => {
     const authData = await authResponse.json();
     const accessToken = authData.access_token;
 
-    // Capture the payment
-    const captureResponse = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`, {
+    // Capture the payment using LIVE endpoint
+    const captureResponse = await fetch(`https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,

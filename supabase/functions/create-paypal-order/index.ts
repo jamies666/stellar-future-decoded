@@ -37,15 +37,15 @@ serve(async (req) => {
     const clientId = paypalClientId.trim();
     const clientSecret = paypalClientSecret.trim();
     
-    console.log('Using PayPal sandbox environment');
+    console.log('Using PayPal LIVE environment');
     console.log('Client ID length:', clientId.length);
     console.log('Client Secret length:', clientSecret.length);
 
-    // Get access token from PayPal
+    // Get access token from PayPal LIVE
     const credentials = btoa(`${clientId}:${clientSecret}`);
     console.log('Generated credentials for auth');
 
-    const authResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const authResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${credentials}`,
@@ -88,7 +88,7 @@ serve(async (req) => {
 
     console.log('Creating PayPal order with data:', JSON.stringify(orderData, null, 2));
 
-    const orderResponse = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+    const orderResponse = await fetch('https://api-m.paypal.com/v2/checkout/orders', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,

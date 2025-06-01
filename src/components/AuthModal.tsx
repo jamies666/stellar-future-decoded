@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Lock, User } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,24 +26,59 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate authentication - replace with actual Supabase auth
-    setTimeout(() => {
-      toast.success("Welcome back! You've successfully signed in.");
-      onAuthSuccess();
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Welcome back! You've successfully signed in.");
+        onAuthSuccess();
+        // Reset form
+        setEmail("");
+        setPassword("");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate authentication - replace with actual Supabase auth
-    setTimeout(() => {
-      toast.success("Account created successfully! Welcome to Cosmic Insights.");
-      onAuthSuccess();
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Account created successfully! Please check your email to verify your account.");
+        onAuthSuccess();
+        // Reset form
+        setEmail("");
+        setPassword("");
+        setName("");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

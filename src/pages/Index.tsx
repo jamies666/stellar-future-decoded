@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Stars, Moon, Sun, Sparkles } from "lucide-react";
@@ -7,12 +7,57 @@ import AuthModal from "@/components/AuthModal";
 import ZodiacSelector from "@/components/ZodiacSelector";
 import HoroscopeDisplay from "@/components/HoroscopeDisplay";
 import PaymentSection from "@/components/PaymentSection";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedZodiac, setSelectedZodiac] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Get initial session
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setLoading(false);
+    };
+
+    getSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        if (event === 'SIGNED_IN') {
+          toast.success("Successfully signed in!");
+          setIsAuthModalOpen(false);
+        }
+        if (event === 'SIGNED_OUT') {
+          toast.success("Successfully signed out!");
+          setSelectedZodiac("");
+          setHasPaid(false);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-900 relative overflow-hidden">
@@ -31,17 +76,30 @@ const Index = () => {
             <Stars className="h-8 w-8 text-yellow-400" />
             <h1 className="text-2xl font-bold text-white">Cosmic Insights</h1>
           </div>
-          <Button
-            onClick={() => setIsAuthModalOpen(true)}
-            variant="outline"
-            className="bg-purple-800/30 border-purple-400 text-white hover:bg-purple-700/50"
-          >
-            {isLoggedIn ? "Dashboard" : "Sign In"}
-          </Button>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-white">Welcome, {user.email}</span>
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                className="bg-purple-800/30 border-purple-400 text-white hover:bg-purple-700/50"
+              >
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={() => setIsAuthModalOpen(true)}
+              variant="outline"
+              className="bg-purple-800/30 border-purple-400 text-white hover:bg-purple-700/50"
+            >
+              Sign In
+            </Button>
+          )}
         </header>
 
         {/* Hero Section */}
-        {!isLoggedIn && (
+        {!user && (
           <section className="text-center py-20 px-6">
             <div className="max-w-4xl mx-auto">
               <div className="flex justify-center mb-6">
@@ -72,7 +130,7 @@ const Index = () => {
         )}
 
         {/* Logged in experience */}
-        {isLoggedIn && (
+        {user && (
           <div className="max-w-6xl mx-auto px-6 py-12">
             <div className="grid md:grid-cols-2 gap-8">
               <div>
@@ -96,7 +154,7 @@ const Index = () => {
         )}
 
         {/* Features Section */}
-        {!isLoggedIn && (
+        {!user && (
           <section className="py-20 px-6">
             <div className="max-w-6xl mx-auto">
               <h3 className="text-3xl font-bold text-white text-center mb-12">
@@ -134,12 +192,11 @@ const Index = () => {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={() => {
-          setIsLoggedIn(true);
           setIsAuthModalOpen(false);
         }}
       />
 
-      <style jsx>{`
+      <style>{`
         .stars {
           width: 1px;
           height: 1px;

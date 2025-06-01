@@ -18,50 +18,87 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isProcessing) {
+      console.log('Payment already in progress, ignoring click');
+      return;
+    }
+
     setIsProcessing(true);
+    console.log('Starting PayPal payment process...');
 
     try {
-      console.log('Starting PayPal payment process...');
-
       // Check if user is authenticated
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        console.error('Authentication error:', sessionError);
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Authentication error. Please try logging in again.');
+      }
+      
+      if (!session) {
+        console.error('No session found');
         throw new Error('Please log in to make a payment');
       }
+      
       console.log('User authenticated:', session.user.id);
 
       // Create PayPal order
       console.log('Calling create-paypal-order function...');
+      
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-paypal-order', {
-        body: {}
+        body: { 
+          paypalEmail: paypalEmail || undefined 
+        }
       });
+
+      console.log('Response received from create-paypal-order:', { orderData, orderError });
 
       if (orderError) {
         console.error('Error creating PayPal order:', orderError);
         throw new Error(`Failed to create PayPal order: ${orderError.message}`);
       }
 
-      if (!orderData || !orderData.success) {
-        console.error('No order data received or order creation failed:', orderData);
-        throw new Error('Failed to create PayPal order');
+      if (!orderData) {
+        console.error('No order data received from function');
+        throw new Error('No response received from payment service');
       }
 
-      console.log('PayPal order created successfully:', orderData);
+      if (!orderData.success) {
+        console.error('Order creation failed:', orderData);
+        throw new Error(orderData.error || 'Failed to create PayPal order');
+      }
 
-      // Store order ID for later use
+      if (!orderData.orderId || !orderData.approvalUrl) {
+        console.error('Missing order data:', orderData);
+        throw new Error('Invalid response from payment service');
+      }
+
+      console.log('PayPal order created successfully:', {
+        orderId: orderData.orderId,
+        approvalUrl: orderData.approvalUrl
+      });
+
+      // Store order ID and session info for later verification
       localStorage.setItem('paypal_order_id', orderData.orderId);
       localStorage.setItem('payment_session_token', session.access_token);
       
-      console.log('Redirecting to PayPal approval URL:', orderData.approvalUrl);
+      console.log('Stored payment data, redirecting to PayPal...');
+      console.log('Approval URL:', orderData.approvalUrl);
       
-      // Redirect directly to PayPal
+      // Small delay to ensure localStorage is saved
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Redirect to PayPal for payment approval
       window.location.href = orderData.approvalUrl;
 
     } catch (error) {
       console.error('Payment error:', error);
       setIsProcessing(false);
-      toast.error(error instanceof Error ? error.message : "Payment failed");
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : "Payment initialization failed";
+      toast.error(errorMessage);
+      
       // Clean up stored data on error
       localStorage.removeItem('paypal_order_id');
       localStorage.removeItem('payment_session_token');
@@ -111,6 +148,7 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
               onChange={(e) => setPaypalEmail(e.target.value)}
               placeholder="your@email.com"
               className="bg-purple-900/30 border-purple-400/50 text-white placeholder:text-purple-300"
+              disabled={isProcessing}
             />
           </div>
 

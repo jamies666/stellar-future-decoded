@@ -49,13 +49,13 @@ serve(async (req) => {
     const authData = await authResponse.json();
     const accessToken = authData.access_token;
 
-    // Create PayPal order
+    // Create PayPal order with updated price
     const orderData = {
       intent: 'CAPTURE',
       purchase_units: [{
         amount: {
           currency_code: 'USD',
-          value: '9.99'
+          value: '1.99'
         },
         description: 'Cosmic Insights - Personalized Reading'
       }],

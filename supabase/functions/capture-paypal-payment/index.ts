@@ -87,13 +87,13 @@ serve(async (req) => {
         throw new Error('Invalid user token');
       }
 
-      // Store payment record
+      // Store payment record with updated amount
       const { error: paymentError } = await supabase
         .from('payments')
         .insert({
           user_id: user.id,
           paypal_order_id: orderId,
-          amount: 9.99,
+          amount: 1.99,
           currency: 'USD',
           status: 'completed',
           paypal_capture_data: captureData

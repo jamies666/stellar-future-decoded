@@ -131,12 +131,12 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
           <Star className="h-6 w-6 text-yellow-400" />
           Unlock Your Cosmic Reading
         </CardTitle>
-        <p className="text-purple-200">Get your detailed horoscope for just $9.99</p>
+        <p className="text-purple-200">Get your detailed horoscope for just $1.99</p>
       </CardHeader>
       
       <CardContent className="space-y-6">
         <div className="text-center">
-          <div className="text-3xl font-bold text-white mb-2">$9.99</div>
+          <div className="text-3xl font-bold text-white mb-2">$1.99</div>
           <p className="text-purple-200 text-sm">One-time payment • Detailed AI-powered reading</p>
         </div>
 
@@ -180,7 +180,7 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
             ) : (
               <>
                 <CreditCard className="mr-2 h-5 w-5" />
-                Pay with PayPal - $9.99
+                Pay with PayPal - $1.99
               </>
             )}
           </Button>

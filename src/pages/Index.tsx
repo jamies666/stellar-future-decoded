@@ -21,6 +21,9 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("traditional");
+  
+  // For testing purposes - set this to true to bypass payment
+  const TESTING_MODE = true;
 
   useEffect(() => {
     console.log("Index component mounted, setting up auth listener");
@@ -76,6 +79,15 @@ const Index = () => {
     setUserProfile(profileData);
   };
 
+  const handlePaymentSuccess = () => {
+    setHasPaid(true);
+  };
+
+  // Function to check if user can access content (paywall logic)
+  const canAccessContent = () => {
+    return TESTING_MODE || hasPaid;
+  };
+
   if (loading) {
     console.log("App is loading...");
     return (
@@ -103,6 +115,9 @@ const Index = () => {
           <div className="flex items-center space-x-2">
             <Stars className="h-8 w-8 text-yellow-400" />
             <h1 className="text-2xl font-bold text-white">Cosmic Insights</h1>
+            {TESTING_MODE && (
+              <span className="text-xs bg-red-500 text-white px-2 py-1 rounded">TESTING MODE</span>
+            )}
           </div>
           {user ? (
             <div className="flex items-center gap-4">
@@ -188,14 +203,14 @@ const Index = () => {
                       selectedZodiac={selectedZodiac}
                       onZodiacSelect={setSelectedZodiac}
                     />
-                    {!hasPaid && selectedZodiac && (
+                    {!canAccessContent() && selectedZodiac && (
                       <div className="mt-8">
-                        <PaymentSection onPaymentSuccess={() => setHasPaid(true)} />
+                        <PaymentSection onPaymentSuccess={handlePaymentSuccess} />
                       </div>
                     )}
                   </div>
                   <div>
-                    {hasPaid && selectedZodiac && (
+                    {canAccessContent() && selectedZodiac && (
                       <HoroscopeDisplay zodiacSign={selectedZodiac} />
                     )}
                   </div>
@@ -211,27 +226,34 @@ const Index = () => {
                         isLoading={false}
                       />
                     ) : (
-                      <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
-                        <CardContent className="p-6">
-                          <h3 className="text-white text-lg font-semibold mb-4">Your Profile</h3>
-                          <div className="space-y-2 text-purple-200">
-                            <p><strong>Name:</strong> {userProfile.fullName}</p>
-                            <p><strong>Birth:</strong> {userProfile.birthDate}</p>
-                            <p><strong>Place:</strong> {userProfile.birthPlace}</p>
+                      <>
+                        <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+                          <CardContent className="p-6">
+                            <h3 className="text-white text-lg font-semibold mb-4">Your Profile</h3>
+                            <div className="space-y-2 text-purple-200">
+                              <p><strong>Name:</strong> {userProfile.fullName}</p>
+                              <p><strong>Birth:</strong> {userProfile.birthDate}</p>
+                              <p><strong>Place:</strong> {userProfile.birthPlace}</p>
+                            </div>
+                            <Button
+                              onClick={() => setUserProfile(null)}
+                              variant="outline"
+                              className="mt-4 border-purple-400 text-white hover:bg-purple-900/50"
+                            >
+                              Edit Profile
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        {!canAccessContent() && (
+                          <div className="mt-8">
+                            <PaymentSection onPaymentSuccess={handlePaymentSuccess} />
                           </div>
-                          <Button
-                            onClick={() => setUserProfile(null)}
-                            variant="outline"
-                            className="mt-4 border-purple-400 text-white hover:bg-purple-900/50"
-                          >
-                            Edit Profile
-                          </Button>
-                        </CardContent>
-                      </Card>
+                        )}
+                      </>
                     )}
                   </div>
                   <div>
-                    {userProfile && (
+                    {canAccessContent() && userProfile && (
                       <PersonalizedReading userProfile={userProfile} />
                     )}
                   </div>

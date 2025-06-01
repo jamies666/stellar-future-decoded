@@ -16,7 +16,24 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Generate horoscope function started');
+    
+    // Check if OpenAI API key is available
+    if (!openAIApiKey) {
+      console.error('OPENAI_API_KEY environment variable is not set');
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('OpenAI API key found, length:', openAIApiKey.length);
+
     const { zodiacSign, userProfile, isPersonalized } = await req.json();
+    console.log('Request data:', { zodiacSign, userProfile, isPersonalized });
 
     // Handle personalized reading
     if (isPersonalized && userProfile) {
@@ -57,6 +74,8 @@ Your reading should include:
 
 Begin the reading now, using the client's provided details. Make the message feel truly unique and personal.`;
 
+      console.log('Making OpenAI API request for personalized reading');
+      
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -76,14 +95,25 @@ Begin the reading now, using the client's provided details. Make the message fee
         }),
       });
 
+      console.log('OpenAI API response status:', response.status);
+      console.log('OpenAI API response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`OpenAI API error: ${response.status} - ${errorText}`);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('OpenAI API response data keys:', Object.keys(data));
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error('Unexpected OpenAI API response structure:', data);
+        throw new Error('Unexpected response structure from OpenAI API');
+      }
+      
       const reading = data.choices[0].message.content;
-
-      console.log('Generated personalized reading:', reading);
+      console.log('Generated personalized reading length:', reading?.length);
 
       return new Response(JSON.stringify({ reading }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -126,11 +156,22 @@ Begin the reading now, using the client's provided details. Make the message fee
       }),
     });
 
+    console.log('OpenAI API response status for traditional horoscope:', response.status);
+
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error: ${response.status} - ${errorText}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('OpenAI API response data keys for traditional horoscope:', Object.keys(data));
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Unexpected OpenAI API response structure:', data);
+      throw new Error('Unexpected response structure from OpenAI API');
+    }
+    
     const horoscopeText = data.choices[0].message.content;
     
     // Parse the JSON response from ChatGPT
@@ -139,6 +180,7 @@ Begin the reading now, using the client's provided details. Make the message fee
       horoscope = JSON.parse(horoscopeText);
     } catch (parseError) {
       console.error('Failed to parse ChatGPT response as JSON:', parseError);
+      console.log('Raw response:', horoscopeText);
       // Fallback: create a structured response
       horoscope = {
         general: horoscopeText.substring(0, 200) + "...",

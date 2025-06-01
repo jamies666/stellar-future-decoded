@@ -21,6 +21,34 @@ const Index = () => {
   // For testing purposes - set this to false to enable payment requirement
   const TESTING_MODE = false;
 
+  const checkPaymentStatus = async (userId: string): Promise<void> => {
+    try {
+      console.log('Checking payment status for user:', userId);
+      
+      // Query the payments table to check for completed payments
+      const { data: payments, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking payment status:', error);
+        setHasPaid(false);
+        return;
+      }
+
+      const hasCompletedPayment = payments && payments.length > 0;
+      console.log('Payment status checked:', hasCompletedPayment, 'Payments found:', payments);
+      setHasPaid(hasCompletedPayment);
+      
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+      setHasPaid(false);
+    }
+  };
+
   useEffect(() => {
     console.log("Index component mounted, setting up auth listener");
     
@@ -71,34 +99,6 @@ const Index = () => {
       subscription.unsubscribe();
     };
   }, []);
-
-  const checkPaymentStatus = async (userId: string) => {
-    try {
-      console.log('Checking payment status for user:', userId);
-      
-      // Query the payments table to check for completed payments
-      const { data: payments, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('status', 'completed')
-        .limit(1);
-
-      if (error) {
-        console.error('Error checking payment status:', error);
-        setHasPaid(false);
-        return;
-      }
-
-      const hasCompletedPayment = payments && payments.length > 0;
-      console.log('Payment status checked:', hasCompletedPayment, 'Payments found:', payments);
-      setHasPaid(hasCompletedPayment);
-      
-    } catch (error) {
-      console.error('Error checking payment status:', error);
-      setHasPaid(false);
-    }
-  };
 
   const handleSignOut = async () => {
     console.log("Signing out user...");

@@ -11,16 +11,34 @@ export type Database = {
     Tables: {
       payments: {
         Row: {
+          amount: number | null
           created_at: string
+          currency: string | null
           id: number
+          paypal_capture_data: Json | null
+          paypal_order_id: string | null
+          status: string | null
+          user_id: string | null
         }
         Insert: {
+          amount?: number | null
           created_at?: string
+          currency?: string | null
           id?: number
+          paypal_capture_data?: Json | null
+          paypal_order_id?: string | null
+          status?: string | null
+          user_id?: string | null
         }
         Update: {
+          amount?: number | null
           created_at?: string
+          currency?: string | null
           id?: number
+          paypal_capture_data?: Json | null
+          paypal_order_id?: string | null
+          status?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

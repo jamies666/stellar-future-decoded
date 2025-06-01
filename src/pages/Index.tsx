@@ -1,22 +1,26 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Stars, Moon, Sun, Sparkles } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Stars, Moon, Sun, Sparkles, User } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 import ZodiacSelector from "@/components/ZodiacSelector";
 import HoroscopeDisplay from "@/components/HoroscopeDisplay";
+import UserProfileForm from "@/components/UserProfileForm";
+import PersonalizedReading from "@/components/PersonalizedReading";
 import PaymentSection from "@/components/PaymentSection";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedZodiac, setSelectedZodiac] = useState("");
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("traditional");
 
   useEffect(() => {
     console.log("Index component mounted, setting up auth listener");
@@ -47,6 +51,7 @@ const Index = () => {
           toast.success("Successfully signed out!");
           setSelectedZodiac("");
           setHasPaid(false);
+          setUserProfile(null);
         }
       }
     );
@@ -65,6 +70,10 @@ const Index = () => {
   const handleSignOut = async () => {
     console.log("Signing out user...");
     await supabase.auth.signOut();
+  };
+
+  const handleUserProfileSubmit = (profileData: any) => {
+    setUserProfile(profileData);
   };
 
   if (loading) {
@@ -156,27 +165,79 @@ const Index = () => {
                 Welcome to Your Cosmic Journey
               </h2>
               <p className="text-xl text-purple-200">
-                Select your zodiac sign to get your personalized horoscope
+                Choose your reading type and discover what the universe has in store for you
               </p>
             </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <ZodiacSelector 
-                  selectedZodiac={selectedZodiac}
-                  onZodiacSelect={setSelectedZodiac}
-                />
-                {!hasPaid && selectedZodiac && (
-                  <div className="mt-8">
-                    <PaymentSection onPaymentSuccess={() => setHasPaid(true)} />
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-purple-900/50 mb-8">
+                <TabsTrigger value="traditional" className="text-white">
+                  <Stars className="h-4 w-4 mr-2" />
+                  Traditional Horoscope
+                </TabsTrigger>
+                <TabsTrigger value="personalized" className="text-white">
+                  <User className="h-4 w-4 mr-2" />
+                  Personalized Tarot Reading
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="traditional">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <ZodiacSelector 
+                      selectedZodiac={selectedZodiac}
+                      onZodiacSelect={setSelectedZodiac}
+                    />
+                    {!hasPaid && selectedZodiac && (
+                      <div className="mt-8">
+                        <PaymentSection onPaymentSuccess={() => setHasPaid(true)} />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div>
-                {hasPaid && selectedZodiac && (
-                  <HoroscopeDisplay zodiacSign={selectedZodiac} />
-                )}
-              </div>
-            </div>
+                  <div>
+                    {hasPaid && selectedZodiac && (
+                      <HoroscopeDisplay zodiacSign={selectedZodiac} />
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="personalized">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    {!userProfile ? (
+                      <UserProfileForm 
+                        onSubmit={handleUserProfileSubmit}
+                        isLoading={false}
+                      />
+                    ) : (
+                      <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+                        <CardContent className="p-6">
+                          <h3 className="text-white text-lg font-semibold mb-4">Your Profile</h3>
+                          <div className="space-y-2 text-purple-200">
+                            <p><strong>Name:</strong> {userProfile.fullName}</p>
+                            <p><strong>Birth:</strong> {userProfile.birthDate}</p>
+                            <p><strong>Place:</strong> {userProfile.birthPlace}</p>
+                          </div>
+                          <Button
+                            onClick={() => setUserProfile(null)}
+                            variant="outline"
+                            className="mt-4 border-purple-400 text-white hover:bg-purple-900/50"
+                          >
+                            Edit Profile
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                  <div>
+                    {userProfile && (
+                      <PersonalizedReading userProfile={userProfile} />
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 

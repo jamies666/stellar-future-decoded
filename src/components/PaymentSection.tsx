@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreditCard, Shield, Star } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PaymentSectionProps {
   onPaymentSuccess: () => void;
@@ -19,12 +20,108 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
     e.preventDefault();
     setIsProcessing(true);
 
-    // Simulate payment processing - replace with actual PayPal integration
-    setTimeout(() => {
-      toast.success("Payment successful! Your horoscope is being generated...");
-      onPaymentSuccess();
+    try {
+      console.log('Starting PayPal payment process...');
+
+      // Create PayPal order
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-paypal-order', {
+        body: {}
+      });
+
+      if (orderError || !orderData) {
+        console.error('Error creating PayPal order:', orderError);
+        throw new Error('Failed to create PayPal order');
+      }
+
+      console.log('PayPal order created:', orderData);
+
+      // Redirect to PayPal for payment approval
+      if (orderData.approvalUrl) {
+        // Store order ID for later use
+        localStorage.setItem('paypal_order_id', orderData.orderId);
+        
+        // Open PayPal in a new window
+        const paypalWindow = window.open(
+          orderData.approvalUrl,
+          'paypal-payment',
+          'width=600,height=700,scrollbars=yes,resizable=yes'
+        );
+
+        // Listen for the payment completion
+        const checkPaymentStatus = setInterval(async () => {
+          if (paypalWindow?.closed) {
+            clearInterval(checkPaymentStatus);
+            
+            // Check if payment was completed
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (token) {
+              // Payment was approved, capture it
+              await capturePayment(orderData.orderId);
+            } else {
+              setIsProcessing(false);
+              toast.error("Payment was cancelled or failed");
+            }
+          }
+        }, 1000);
+
+        // Also set up a message listener for postMessage communication
+        const messageListener = async (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
+          
+          if (event.data.type === 'PAYPAL_PAYMENT_SUCCESS') {
+            window.removeEventListener('message', messageListener);
+            await capturePayment(orderData.orderId);
+          } else if (event.data.type === 'PAYPAL_PAYMENT_CANCELLED') {
+            window.removeEventListener('message', messageListener);
+            setIsProcessing(false);
+            toast.error("Payment was cancelled");
+          }
+        };
+
+        window.addEventListener('message', messageListener);
+
+      } else {
+        throw new Error('No approval URL received from PayPal');
+      }
+
+    } catch (error) {
+      console.error('Payment error:', error);
       setIsProcessing(false);
-    }, 2000);
+      toast.error(error instanceof Error ? error.message : "Payment failed");
+    }
+  };
+
+  const capturePayment = async (orderId: string) => {
+    try {
+      console.log('Capturing PayPal payment...');
+
+      const { data: captureData, error: captureError } = await supabase.functions.invoke('capture-paypal-payment', {
+        body: { orderId }
+      });
+
+      if (captureError || !captureData) {
+        console.error('Error capturing PayPal payment:', captureError);
+        throw new Error('Failed to capture PayPal payment');
+      }
+
+      console.log('PayPal payment captured:', captureData);
+
+      if (captureData.success) {
+        toast.success("Payment successful! Your reading access has been activated.");
+        onPaymentSuccess();
+        localStorage.removeItem('paypal_order_id');
+      } else {
+        throw new Error('Payment capture was not successful');
+      }
+
+    } catch (error) {
+      console.error('Capture error:', error);
+      toast.error(error instanceof Error ? error.message : "Payment capture failed");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (

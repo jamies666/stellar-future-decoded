@@ -17,8 +17,8 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   
-  // For testing purposes - set this to true to bypass payment
-  const TESTING_MODE = true;
+  // For testing purposes - set this to false to enable payment requirement
+  const TESTING_MODE = false;
 
   useEffect(() => {
     console.log("Index component mounted, setting up auth listener");
@@ -29,6 +29,12 @@ const Index = () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       console.log("Initial session:", session, "Error:", error);
       setUser(session?.user ?? null);
+      
+      // Check if user has made a payment
+      if (session?.user) {
+        await checkPaymentStatus(session.user.id);
+      }
+      
       setLoading(false);
     };
 
@@ -36,13 +42,19 @@ const Index = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log("Auth state changed:", event, "Session:", session);
         setUser(session?.user ?? null);
+        
         if (event === 'SIGNED_IN') {
           console.log("User signed in successfully");
           toast.success("Successfully signed in!");
           setIsAuthModalOpen(false);
+          
+          // Check payment status for the signed-in user
+          if (session?.user) {
+            await checkPaymentStatus(session.user.id);
+          }
         }
         if (event === 'SIGNED_OUT') {
           console.log("User signed out");
@@ -58,6 +70,27 @@ const Index = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  const checkPaymentStatus = async (userId: string) => {
+    try {
+      const { data: payments, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking payment status:', error);
+        return;
+      }
+
+      setHasPaid(payments && payments.length > 0);
+      console.log('Payment status checked:', payments && payments.length > 0);
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+    }
+  };
 
   // Add this useEffect to log user state changes
   useEffect(() => {
@@ -78,8 +111,12 @@ const Index = () => {
     setUserProfile(profileData);
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     setHasPaid(true);
+    // Refresh payment status from database
+    if (user) {
+      await checkPaymentStatus(user.id);
+    }
   };
 
   // Function to check if user can access content (paywall logic)
@@ -338,7 +375,7 @@ const Index = () => {
                   <>
                     <div className="bg-green-500/20 border border-green-400/50 rounded-lg p-4 mb-4">
                       <p className="text-green-200 text-sm">
-                        Debug: ReadingSelector should be visible below
+                        {hasPaid ? "✓ Payment verified - Full access granted" : "Debug: ReadingSelector should be visible below"}
                       </p>
                     </div>
                     <ReadingSelector userProfile={userProfile} />

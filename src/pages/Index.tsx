@@ -1,11 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stars, Moon, Sun, Sparkles, User } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
-import ZodiacSelector from "@/components/ZodiacSelector";
-import HoroscopeDisplay from "@/components/HoroscopeDisplay";
 import UserProfileForm from "@/components/UserProfileForm";
 import PersonalizedReading from "@/components/PersonalizedReading";
 import PaymentSection from "@/components/PaymentSection";
@@ -15,12 +13,10 @@ import { toast } from "sonner";
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [selectedZodiac, setSelectedZodiac] = useState("");
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("traditional");
   
   // For testing purposes - set this to true to bypass payment
   const TESTING_MODE = true;
@@ -52,7 +48,6 @@ const Index = () => {
         if (event === 'SIGNED_OUT') {
           console.log("User signed out");
           toast.success("Successfully signed out!");
-          setSelectedZodiac("");
           setHasPaid(false);
           setUserProfile(null);
         }
@@ -157,8 +152,8 @@ const Index = () => {
                 Destiny
               </h2>
               <p className="text-xl text-purple-200 mb-8 max-w-2xl mx-auto">
-                Get personalized, detailed horoscope readings powered by AI and ancient wisdom. 
-                Discover what the stars have in store for you.
+                Get personalized tarot readings powered by AI and ancient wisdom. 
+                Discover what the universe has in store for you.
               </p>
               <Button
                 onClick={() => setIsAuthModalOpen(true)}
@@ -174,92 +169,59 @@ const Index = () => {
 
         {/* Logged in experience */}
         {user && (
-          <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="max-w-4xl mx-auto px-6 py-12">
             <div className="text-center mb-8">
               <h2 className="text-4xl font-bold text-white mb-4">
                 Welcome to Your Cosmic Journey
               </h2>
               <p className="text-xl text-purple-200">
-                Choose your reading type and discover what the universe has in store for you
+                Get your personalized tarot reading and discover what the universe has in store for you
               </p>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-purple-900/50 mb-8">
-                <TabsTrigger value="traditional" className="text-white">
-                  <Stars className="h-4 w-4 mr-2" />
-                  Traditional Horoscope
-                </TabsTrigger>
-                <TabsTrigger value="personalized" className="text-white">
-                  <User className="h-4 w-4 mr-2" />
-                  Personalized Tarot Reading
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="traditional">
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div>
-                    <ZodiacSelector 
-                      selectedZodiac={selectedZodiac}
-                      onZodiacSelect={setSelectedZodiac}
-                    />
-                    {!canAccessContent() && selectedZodiac && (
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                {!userProfile ? (
+                  <UserProfileForm 
+                    onSubmit={handleUserProfileSubmit}
+                    isLoading={false}
+                  />
+                ) : (
+                  <>
+                    <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+                      <CardContent className="p-6">
+                        <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
+                          <User className="h-5 w-5 text-purple-400" />
+                          Your Profile
+                        </h3>
+                        <div className="space-y-2 text-purple-200">
+                          <p><strong>Name:</strong> {userProfile.fullName}</p>
+                          <p><strong>Birth:</strong> {userProfile.birthDate}</p>
+                          <p><strong>Place:</strong> {userProfile.birthPlace}</p>
+                        </div>
+                        <Button
+                          onClick={() => setUserProfile(null)}
+                          variant="outline"
+                          className="mt-4 border-purple-400 text-white hover:bg-purple-900/50"
+                        >
+                          Edit Profile
+                        </Button>
+                      </CardContent>
+                    </Card>
+                    {!canAccessContent() && (
                       <div className="mt-8">
                         <PaymentSection onPaymentSuccess={handlePaymentSuccess} />
                       </div>
                     )}
-                  </div>
-                  <div>
-                    {canAccessContent() && selectedZodiac && (
-                      <HoroscopeDisplay zodiacSign={selectedZodiac} />
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="personalized">
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div>
-                    {!userProfile ? (
-                      <UserProfileForm 
-                        onSubmit={handleUserProfileSubmit}
-                        isLoading={false}
-                      />
-                    ) : (
-                      <>
-                        <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
-                          <CardContent className="p-6">
-                            <h3 className="text-white text-lg font-semibold mb-4">Your Profile</h3>
-                            <div className="space-y-2 text-purple-200">
-                              <p><strong>Name:</strong> {userProfile.fullName}</p>
-                              <p><strong>Birth:</strong> {userProfile.birthDate}</p>
-                              <p><strong>Place:</strong> {userProfile.birthPlace}</p>
-                            </div>
-                            <Button
-                              onClick={() => setUserProfile(null)}
-                              variant="outline"
-                              className="mt-4 border-purple-400 text-white hover:bg-purple-900/50"
-                            >
-                              Edit Profile
-                            </Button>
-                          </CardContent>
-                        </Card>
-                        {!canAccessContent() && (
-                          <div className="mt-8">
-                            <PaymentSection onPaymentSuccess={handlePaymentSuccess} />
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <div>
-                    {canAccessContent() && userProfile && (
-                      <PersonalizedReading userProfile={userProfile} />
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+                  </>
+                )}
+              </div>
+              <div>
+                {canAccessContent() && userProfile && (
+                  <PersonalizedReading userProfile={userProfile} />
+                )}
+              </div>
+            </div>
           </div>
         )}
 
@@ -275,14 +237,14 @@ const Index = () => {
                   <CardContent className="p-6 text-center">
                     <Stars className="h-12 w-12 text-yellow-400 mx-auto mb-4" />
                     <h4 className="text-xl font-semibold text-white mb-2">AI-Powered Readings</h4>
-                    <p className="text-purple-200">Advanced ChatGPT technology combined with astrological wisdom</p>
+                    <p className="text-purple-200">Advanced ChatGPT technology combined with tarot wisdom</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
                   <CardContent className="p-6 text-center">
                     <Moon className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-                    <h4 className="text-xl font-semibold text-white mb-2">Detailed Insights</h4>
-                    <p className="text-purple-200">Comprehensive horoscopes covering all aspects of your life</p>
+                    <h4 className="text-xl font-semibold text-white mb-2">Personal Insights</h4>
+                    <p className="text-purple-200">Comprehensive tarot readings tailored to your unique birth details</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">

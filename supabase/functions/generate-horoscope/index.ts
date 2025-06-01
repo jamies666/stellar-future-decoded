@@ -32,10 +32,10 @@ serve(async (req) => {
 
     console.log('OpenAI API key found, length:', openAIApiKey.length);
 
-    const { zodiacSign, userProfile, isPersonalized } = await req.json();
-    console.log('Request data:', { zodiacSign, userProfile, isPersonalized });
+    const { userProfile, isPersonalized } = await req.json();
+    console.log('Request data:', { userProfile, isPersonalized });
 
-    // Handle personalized reading
+    // Handle personalized reading only
     if (isPersonalized && userProfile) {
       console.log(`Generating personalized reading for ${userProfile.fullName}`);
 
@@ -83,7 +83,7 @@ Begin the reading now, using the client's provided details. Make the message fee
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4o',
           messages: [
             {
               role: 'user',
@@ -120,81 +120,15 @@ Begin the reading now, using the client's provided details. Make the message fee
       });
     }
 
-    // Handle traditional zodiac horoscope
-    if (!zodiacSign) {
-      return new Response(
-        JSON.stringify({ error: 'Zodiac sign is required' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    // If not a personalized reading request, return error
+    return new Response(
+      JSON.stringify({ error: 'Only personalized readings are supported' }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
 
-    console.log(`Generating horoscope for ${zodiacSign}`);
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a professional astrologer with deep knowledge of astrology and cosmic energies. Create detailed, personalized horoscope readings that are insightful, positive, and meaningful. Your responses should be in JSON format with four sections: general, love, career, and finances. Each section should be 2-3 sentences and feel authentic and mystical.`
-          },
-          {
-            role: 'user',
-            content: `Create a detailed horoscope reading for someone with the zodiac sign ${zodiacSign}. Focus on current cosmic energies and planetary influences. Return the response as a JSON object with four keys: "general", "love", "career", and "finances". Each section should be 2-3 sentences long and feel mystical yet practical.`
-          }
-        ],
-        temperature: 0.8,
-        max_tokens: 800,
-      }),
-    });
-
-    console.log('OpenAI API response status for traditional horoscope:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`OpenAI API error: ${response.status} - ${errorText}`);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log('OpenAI API response data keys for traditional horoscope:', Object.keys(data));
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('Unexpected OpenAI API response structure:', data);
-      throw new Error('Unexpected response structure from OpenAI API');
-    }
-    
-    const horoscopeText = data.choices[0].message.content;
-    
-    // Parse the JSON response from ChatGPT
-    let horoscope;
-    try {
-      horoscope = JSON.parse(horoscopeText);
-    } catch (parseError) {
-      console.error('Failed to parse ChatGPT response as JSON:', parseError);
-      console.log('Raw response:', horoscopeText);
-      // Fallback: create a structured response
-      horoscope = {
-        general: horoscopeText.substring(0, 200) + "...",
-        love: "The cosmic energies are bringing new opportunities for connection and deep emotional experiences.",
-        career: "Your professional path is illuminated by positive planetary influences, encouraging growth and success.",
-        finances: "Financial wisdom and new opportunities are highlighted by the current celestial movements."
-      };
-    }
-
-    console.log('Generated horoscope:', horoscope);
-
-    return new Response(JSON.stringify({ horoscope }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
   } catch (error) {
     console.error('Error in generate-horoscope function:', error);
     return new Response(

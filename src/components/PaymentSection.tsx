@@ -42,9 +42,9 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
         throw new Error(`Failed to create PayPal order: ${orderError.message}`);
       }
 
-      if (!orderData) {
-        console.error('No order data received');
-        throw new Error('No order data received from PayPal');
+      if (!orderData || !orderData.success) {
+        console.error('No order data received or order creation failed:', orderData);
+        throw new Error('Failed to create PayPal order');
       }
 
       console.log('PayPal order created successfully:', orderData);
@@ -55,7 +55,7 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
       
       console.log('Redirecting to PayPal approval URL:', orderData.approvalUrl);
       
-      // Redirect directly to PayPal instead of opening a popup
+      // Redirect directly to PayPal
       window.location.href = orderData.approvalUrl;
 
     } catch (error) {
@@ -65,61 +65,6 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
       // Clean up stored data on error
       localStorage.removeItem('paypal_order_id');
       localStorage.removeItem('payment_session_token');
-    }
-  };
-
-  const capturePayment = async (orderId: string) => {
-    try {
-      console.log('Starting payment capture for order:', orderId);
-
-      // Get fresh session to ensure we have valid token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        console.error('Session error during capture:', sessionError);
-        throw new Error('Authentication expired. Please log in again.');
-      }
-
-      console.log('Session valid for capture. User:', session.user.id);
-      console.log('Calling capture-paypal-payment function...');
-
-      const { data: captureData, error: captureError } = await supabase.functions.invoke('capture-paypal-payment', {
-        body: { orderId }
-      });
-
-      if (captureError) {
-        console.error('Error capturing PayPal payment:', captureError);
-        throw new Error(`Failed to capture PayPal payment: ${captureError.message}`);
-      }
-
-      if (!captureData) {
-        console.error('No capture data received');
-        throw new Error('No response received from payment capture');
-      }
-
-      console.log('PayPal payment capture response:', captureData);
-
-      if (captureData.success) {
-        console.log('Payment captured successfully');
-        toast.success("Payment successful! Your reading access has been activated.");
-        onPaymentSuccess();
-        
-        // Clean up stored data
-        localStorage.removeItem('paypal_order_id');
-        localStorage.removeItem('payment_session_token');
-      } else {
-        console.error('Payment capture was not successful:', captureData);
-        throw new Error(captureData.message || 'Payment capture was not successful');
-      }
-
-    } catch (error) {
-      console.error('Capture error:', error);
-      toast.error(error instanceof Error ? error.message : "Payment capture failed");
-      
-      // Clean up stored data
-      localStorage.removeItem('paypal_order_id');
-      localStorage.removeItem('payment_session_token');
-    } finally {
-      setIsProcessing(false);
     }
   };
 

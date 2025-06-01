@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stars, Heart, DollarSign, Briefcase, Download, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HoroscopeDisplayProps {
   zodiacSign: string;
@@ -15,17 +16,32 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
   const [isGenerating, setIsGenerating] = useState(true);
 
   useEffect(() => {
-    // Simulate horoscope generation - replace with actual ChatGPT API call
-    setIsGenerating(true);
-    setTimeout(() => {
-      setHoroscope({
-        general: `As a ${zodiacSign}, the cosmic energies are particularly aligned in your favor this period. The universe is whispering secrets of transformation and growth, urging you to embrace the changes coming your way. Your natural strengths are being amplified by celestial forces, creating opportunities for profound personal development.`,
-        love: `Venus is dancing through your romantic sector, bringing passionate energies and deep emotional connections. For ${zodiacSign} individuals, this is a time of heart-opening experiences. Single? The universe is preparing to introduce someone who resonates with your soul's frequency. Partnered? Expect your relationship to reach new depths of intimacy and understanding.`,
-        career: `Jupiter's expansive energy is illuminating your professional path, dear ${zodiacSign}. Your career sector is buzzing with potential and possibility. This is an excellent time to showcase your talents and step into leadership roles. Trust your instincts when making important business decisions - the stars are guiding you toward success.`,
-        finances: `Mercury's influence on your financial sector suggests a period of smart money management and unexpected opportunities. For ${zodiacSign}, this is a time to be both practical and optimistic about your resources. Consider investments that align with your values, and don't be surprised if a new income stream presents itself.`,
-      });
-      setIsGenerating(false);
-    }, 3000);
+    const generateHoroscope = async () => {
+      setIsGenerating(true);
+      console.log(`Generating horoscope for ${zodiacSign}`);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-horoscope', {
+          body: { zodiacSign }
+        });
+
+        if (error) {
+          console.error('Supabase function error:', error);
+          toast.error('Failed to generate horoscope. Please try again.');
+          return;
+        }
+
+        console.log('Received horoscope data:', data);
+        setHoroscope(data.horoscope);
+      } catch (error) {
+        console.error('Error generating horoscope:', error);
+        toast.error('Failed to generate horoscope. Please try again.');
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    generateHoroscope();
   }, [zodiacSign]);
 
   const handleEmailReading = () => {
@@ -45,7 +61,7 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
             Consulting the Stars...
           </h3>
           <p className="text-purple-200">
-            The universe is crafting your personalized {zodiacSign} reading
+            ChatGPT is crafting your personalized {zodiacSign} reading
           </p>
         </CardContent>
       </Card>
@@ -60,7 +76,7 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
             <Stars className="h-6 w-6 text-yellow-400" />
             Your {zodiacSign} Horoscope
           </CardTitle>
-          <p className="text-purple-200">Generated with cosmic AI wisdom</p>
+          <p className="text-purple-200">Generated with AI cosmic wisdom</p>
         </CardHeader>
       </Card>
 
@@ -88,7 +104,7 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
           <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
             <CardContent className="p-6">
               <h3 className="text-xl font-semibold text-white mb-4">General Forecast</h3>
-              <p className="text-purple-100 leading-relaxed">{horoscope.general}</p>
+              <p className="text-purple-100 leading-relaxed">{horoscope?.general || 'Loading your cosmic insights...'}</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -100,7 +116,7 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
                 <Heart className="h-5 w-5 text-pink-400" />
                 Love & Relationships
               </h3>
-              <p className="text-purple-100 leading-relaxed">{horoscope.love}</p>
+              <p className="text-purple-100 leading-relaxed">{horoscope?.love || 'Loading your romantic insights...'}</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -112,7 +128,7 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
                 <Briefcase className="h-5 w-5 text-blue-400" />
                 Career & Professional Life
               </h3>
-              <p className="text-purple-100 leading-relaxed">{horoscope.career}</p>
+              <p className="text-purple-100 leading-relaxed">{horoscope?.career || 'Loading your professional insights...'}</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -124,7 +140,7 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
                 <DollarSign className="h-5 w-5 text-green-400" />
                 Financial Outlook
               </h3>
-              <p className="text-purple-100 leading-relaxed">{horoscope.finances}</p>
+              <p className="text-purple-100 leading-relaxed">{horoscope?.finances || 'Loading your financial insights...'}</p>
             </CardContent>
           </Card>
         </TabsContent>

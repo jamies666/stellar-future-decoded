@@ -31,6 +31,7 @@ const Index = () => {
         .select('*')
         .eq('user_id', userId)
         .eq('status', 'completed')
+        .order('created_at', { ascending: false })
         .limit(1);
 
       if (error) {
@@ -42,6 +43,20 @@ const Index = () => {
       const hasCompletedPayment = payments && payments.length > 0;
       console.log('Payment status checked:', hasCompletedPayment, 'Payments found:', payments);
       setHasPaid(hasCompletedPayment);
+      
+      // If payment is found, also check if we have a stored user profile
+      if (hasCompletedPayment) {
+        const storedProfile = localStorage.getItem(`userProfile_${userId}`);
+        if (storedProfile) {
+          try {
+            const profile = JSON.parse(storedProfile);
+            setUserProfile(profile);
+            console.log('Restored user profile from localStorage:', profile);
+          } catch (e) {
+            console.error('Error parsing stored profile:', e);
+          }
+        }
+      }
       
     } catch (error) {
       console.error('Error checking payment status:', error);
@@ -112,9 +127,15 @@ const Index = () => {
   const handleUserProfileSubmit = (profileData: any) => {
     console.log("Profile submitted:", profileData);
     setUserProfile(profileData);
+    
+    // Store profile in localStorage for persistence
+    if (user) {
+      localStorage.setItem(`userProfile_${user.id}`, JSON.stringify(profileData));
+    }
   };
 
   const handlePaymentSuccess = async () => {
+    console.log("Payment success triggered, refreshing payment status");
     setHasPaid(true);
     // Refresh payment status from database
     if (user) {

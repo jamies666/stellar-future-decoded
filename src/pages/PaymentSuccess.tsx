@@ -73,10 +73,10 @@ const PaymentSuccess = () => {
           localStorage.removeItem('paypal_order_id');
           localStorage.removeItem('payment_session_token');
           
-          // Redirect to home after 3 seconds
+          // Redirect to home after 2 seconds to give user time to see success message
           setTimeout(() => {
-            navigate('/');
-          }, 3000);
+            navigate('/', { replace: true });
+          }, 2000);
         } else {
           console.error('Payment capture was not successful:', captureData);
           throw new Error(captureData.message || 'Payment capture was not successful');
@@ -99,7 +99,7 @@ const PaymentSuccess = () => {
   }, [searchParams, navigate]);
 
   const handleReturnHome = () => {
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   if (paymentStatus === 'processing') {
@@ -137,13 +137,13 @@ const PaymentSuccess = () => {
               Your payment has been processed successfully. You now have access to personalized readings!
             </p>
             <p className="text-purple-200 text-sm">
-              Redirecting you back to the main page...
+              Redirecting you back to get your reading...
             </p>
             <Button
               onClick={handleReturnHome}
               className="w-full bg-gradient-to-r from-green-500 to-purple-500 hover:from-green-600 hover:to-purple-600 text-white"
             >
-              Return to Cosmic Insights
+              Continue to Your Reading
             </Button>
           </CardContent>
         </Card>

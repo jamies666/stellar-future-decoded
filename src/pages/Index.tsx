@@ -19,9 +19,13 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Index component mounted, setting up auth listener");
+    
     // Get initial session
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Getting initial session...");
+      const { data: { session }, error } = await supabase.auth.getSession();
+      console.log("Initial session:", session, "Error:", error);
       setUser(session?.user ?? null);
       setLoading(false);
     };
@@ -31,12 +35,15 @@ const Index = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state changed:", event, "Session:", session);
         setUser(session?.user ?? null);
         if (event === 'SIGNED_IN') {
+          console.log("User signed in successfully");
           toast.success("Successfully signed in!");
           setIsAuthModalOpen(false);
         }
         if (event === 'SIGNED_OUT') {
+          console.log("User signed out");
           toast.success("Successfully signed out!");
           setSelectedZodiac("");
           setHasPaid(false);
@@ -44,20 +51,32 @@ const Index = () => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("Cleaning up auth listener");
+      subscription.unsubscribe();
+    };
   }, []);
 
+  // Add this useEffect to log user state changes
+  useEffect(() => {
+    console.log("User state changed:", user);
+  }, [user]);
+
   const handleSignOut = async () => {
+    console.log("Signing out user...");
     await supabase.auth.signOut();
   };
 
   if (loading) {
+    console.log("App is loading...");
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
   }
+
+  console.log("Rendering Index with user:", user ? "authenticated" : "not authenticated");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-slate-900 relative overflow-hidden">
@@ -132,6 +151,14 @@ const Index = () => {
         {/* Logged in experience */}
         {user && (
           <div className="max-w-6xl mx-auto px-6 py-12">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold text-white mb-4">
+                Welcome to Your Cosmic Journey
+              </h2>
+              <p className="text-xl text-purple-200">
+                Select your zodiac sign to get your personalized horoscope
+              </p>
+            </div>
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <ZodiacSelector 
@@ -192,6 +219,7 @@ const Index = () => {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={() => {
+          console.log("Auth success callback triggered");
           setIsAuthModalOpen(false);
         }}
       />

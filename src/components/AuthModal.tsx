@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,7 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
       } else {
         toast.success("Welcome back! You've successfully signed in.");
         onAuthSuccess();
+        onClose();
         // Reset form
         setEmail("");
         setPassword("");
@@ -69,6 +70,7 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
       } else {
         toast.success("Account created successfully! Please check your email to verify your account.");
         onAuthSuccess();
+        onClose();
         // Reset form
         setEmail("");
         setPassword("");
@@ -88,6 +90,9 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
           <DialogTitle className="text-white text-center text-2xl">
             Join the Cosmic Community
           </DialogTitle>
+          <DialogDescription className="text-purple-200 text-center">
+            Sign in to access your personalized horoscope readings
+          </DialogDescription>
         </DialogHeader>
         
         <Tabs defaultValue="signin" className="w-full">

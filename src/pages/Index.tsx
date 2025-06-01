@@ -67,32 +67,49 @@ const Index = () => {
   useEffect(() => {
     console.log("Index component mounted, setting up auth listener");
     
-    // Get initial session
-    const getSession = async () => {
-      console.log("Getting initial session...");
-      const { data: { session }, error } = await supabase.auth.getSession();
-      console.log("Initial session:", session, "Error:", error);
-      setUser(session?.user ?? null);
-      
-      // Check if user has made a payment
-      if (session?.user) {
-        await checkPaymentStatus(session.user.id);
-      }
-      
-      // Always set loading to false after getting initial session
+    // Set a fallback timeout to ensure loading is cleared
+    const loadingTimeout = setTimeout(() => {
+      console.log("Loading timeout reached, clearing loading state");
       setLoading(false);
-    };
+    }, 5000); // 5 second timeout
 
-    getSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state changed:", event, "Session:", session);
+    // Get initial session with proper error handling
+    const getSession = async () => {
+      try {
+        console.log("Getting initial session...");
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("Initial session result:", session ? "found" : "none", "Error:", error);
+        
+        if (error) {
+          console.error("Session error:", error);
+        }
+        
         setUser(session?.user ?? null);
         
-        // Ensure loading is set to false on any auth state change
+        // Check if user has made a payment
+        if (session?.user) {
+          await checkPaymentStatus(session.user.id);
+        }
+        
+      } catch (error) {
+        console.error("Error getting session:", error);
+      } finally {
+        // Always clear loading state
+        console.log("Clearing loading state after session check");
+        clearTimeout(loadingTimeout);
         setLoading(false);
+      }
+    };
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state changed:", event, "Session:", session ? "exists" : "none");
+        setUser(session?.user ?? null);
+        
+        // Ensure loading is cleared on any auth state change
+        setLoading(false);
+        clearTimeout(loadingTimeout);
         
         if (event === 'SIGNED_IN') {
           console.log("User signed in successfully");
@@ -113,8 +130,12 @@ const Index = () => {
       }
     );
 
+    // Get the initial session
+    getSession();
+
     return () => {
       console.log("Cleaning up auth listener");
+      clearTimeout(loadingTimeout);
       subscription.unsubscribe();
     };
   }, []);

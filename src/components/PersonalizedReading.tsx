@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Stars, Download, Mail, Sparkles } from "lucide-react";
@@ -16,39 +16,37 @@ interface PersonalizedReadingProps {
 
 const PersonalizedReading = ({ userProfile }: PersonalizedReadingProps) => {
   const [reading, setReading] = useState<string>("");
-  const [isGenerating, setIsGenerating] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
-  useEffect(() => {
-    const generateReading = async () => {
-      setIsGenerating(true);
-      console.log(`Generating personalized reading for ${userProfile.fullName}`);
+  const generateReading = async () => {
+    setIsGenerating(true);
+    console.log(`Generating personalized reading for ${userProfile.fullName}`);
 
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-horoscope', {
-          body: { 
-            userProfile,
-            isPersonalized: true
-          }
-        });
-
-        if (error) {
-          console.error('Supabase function error:', error);
-          toast.error('Failed to generate your reading. Please try again.');
-          return;
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-horoscope', {
+        body: { 
+          userProfile,
+          isPersonalized: true
         }
+      });
 
-        console.log('Received reading data:', data);
-        setReading(data.reading);
-      } catch (error) {
-        console.error('Error generating reading:', error);
+      if (error) {
+        console.error('Supabase function error:', error);
         toast.error('Failed to generate your reading. Please try again.');
-      } finally {
-        setIsGenerating(false);
+        return;
       }
-    };
 
-    generateReading();
-  }, [userProfile]);
+      console.log('Received reading data:', data);
+      setReading(data.reading);
+      setHasGenerated(true);
+    } catch (error) {
+      console.error('Error generating reading:', error);
+      toast.error('Failed to generate your reading. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleEmailReading = () => {
     toast.success("Your personalized reading has been sent to your email!");
@@ -74,49 +72,91 @@ const PersonalizedReading = ({ userProfile }: PersonalizedReadingProps) => {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-400/30 backdrop-blur-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-white flex items-center justify-center gap-2">
-            <Sparkles className="h-6 w-6 text-yellow-400" />
-            Your Personal Tarot Reading
-          </CardTitle>
-          <p className="text-purple-200">For {userProfile.fullName}</p>
-          <p className="text-purple-300 text-sm">
-            Born on {userProfile.birthDate} in {userProfile.birthPlace}
-          </p>
-        </CardHeader>
-      </Card>
+  if (hasGenerated && reading) {
+    return (
+      <div className="space-y-6">
+        <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-400/30 backdrop-blur-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-white flex items-center justify-center gap-2">
+              <Sparkles className="h-6 w-6 text-yellow-400" />
+              Your Personal Tarot Reading
+            </CardTitle>
+            <p className="text-purple-200">For {userProfile.fullName}</p>
+            <p className="text-purple-300 text-sm">
+              Born on {userProfile.birthDate} in {userProfile.birthPlace}
+            </p>
+          </CardHeader>
+        </Card>
 
-      <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
-        <CardContent className="p-6">
-          <div className="prose prose-invert max-w-none">
-            <div className="text-purple-100 leading-relaxed whitespace-pre-wrap">
-              {reading || 'Loading your cosmic insights...'}
+        <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+          <CardContent className="p-6">
+            <div className="prose prose-invert max-w-none">
+              <div className="text-purple-100 leading-relaxed whitespace-pre-wrap">
+                {reading}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <div className="flex gap-4">
+        <div className="flex gap-4">
+          <Button
+            onClick={handleEmailReading}
+            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Email Reading
+          </Button>
+          <Button
+            onClick={handleDownloadPDF}
+            variant="outline"
+            className="flex-1 border-purple-400 text-white hover:bg-purple-900/50"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
+          </Button>
+        </div>
+
         <Button
-          onClick={handleEmailReading}
-          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-        >
-          <Mail className="mr-2 h-4 w-4" />
-          Email Reading
-        </Button>
-        <Button
-          onClick={handleDownloadPDF}
+          onClick={() => {
+            setHasGenerated(false);
+            setReading("");
+          }}
           variant="outline"
-          className="flex-1 border-purple-400 text-white hover:bg-purple-900/50"
+          className="w-full border-purple-400 text-white hover:bg-purple-900/50"
         >
-          <Download className="mr-2 h-4 w-4" />
-          Download PDF
+          Get Another Reading
         </Button>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <Card className="bg-purple-900/30 border-purple-400/30 backdrop-blur-md">
+      <CardHeader>
+        <CardTitle className="text-white flex items-center gap-2">
+          <Stars className="h-5 w-5 text-purple-400" />
+          Personal Reading
+        </CardTitle>
+        <p className="text-purple-200 text-sm">
+          Get a comprehensive personal tarot reading based on your birth details
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2 text-purple-200">
+          <p><strong>Name:</strong> {userProfile.fullName}</p>
+          <p><strong>Birth:</strong> {userProfile.birthDate}</p>
+          <p><strong>Place:</strong> {userProfile.birthPlace}</p>
+        </div>
+
+        <Button
+          onClick={generateReading}
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+        >
+          <Sparkles className="mr-2 h-4 w-4" />
+          Generate Personal Reading
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 

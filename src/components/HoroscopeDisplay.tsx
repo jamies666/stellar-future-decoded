@@ -61,7 +61,7 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
             Consulting the Stars...
           </h3>
           <p className="text-purple-200">
-            ChatGPT is crafting your personalized {zodiacSign} reading
+            Crafting your personalized {zodiacSign} reading
           </p>
         </CardContent>
       </Card>
@@ -76,7 +76,7 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
             <Stars className="h-6 w-6 text-yellow-400" />
             Your {zodiacSign} Horoscope
           </CardTitle>
-          <p className="text-purple-200">Generated with AI cosmic wisdom</p>
+          <p className="text-purple-200">Your cosmic wisdom reading</p>
         </CardHeader>
       </Card>
 

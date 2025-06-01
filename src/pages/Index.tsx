@@ -73,15 +73,29 @@ const Index = () => {
 
   const checkPaymentStatus = async (userId: string) => {
     try {
-      // For now, we'll use a simple check since we don't have the table defined
-      // This will be updated once the payments table is created
       console.log('Checking payment status for user:', userId);
       
-      // Temporary: assume no payment for now
-      setHasPaid(false);
-      console.log('Payment status checked: false (no payments table yet)');
+      // Query the payments table to check for completed payments
+      const { data: payments, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking payment status:', error);
+        setHasPaid(false);
+        return;
+      }
+
+      const hasCompletedPayment = payments && payments.length > 0;
+      console.log('Payment status checked:', hasCompletedPayment, 'Payments found:', payments);
+      setHasPaid(hasCompletedPayment);
+      
     } catch (error) {
       console.error('Error checking payment status:', error);
+      setHasPaid(false);
     }
   };
 

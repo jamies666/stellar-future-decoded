@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Stars, Moon, Sun, Sparkles, User } from "lucide-react";
+import { Stars, Moon, Sun, Sparkles, User, Quote } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 import UserProfileForm from "@/components/UserProfileForm";
 import ReadingSelector from "@/components/ReadingSelector";
@@ -171,6 +172,76 @@ const Index = () => {
                 <Sparkles className="mr-2 h-5 w-5" />
                 Start Your Journey
               </Button>
+            </div>
+          </section>
+        )}
+
+        {/* Example Reading Section */}
+        {!user && (
+          <section className="py-20 px-6">
+            <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-12">
+                <h3 className="text-3xl font-bold text-white mb-4 flex items-center justify-center gap-2">
+                  <Quote className="h-8 w-8 text-yellow-400" />
+                  What to Expect
+                </h3>
+                <p className="text-xl text-purple-200">
+                  Here's an example of the in-depth, personalized readings you'll receive
+                </p>
+              </div>
+              
+              <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-400/30 backdrop-blur-md">
+                <CardContent className="p-8">
+                  <div className="space-y-6">
+                    <div className="text-center border-b border-purple-400/30 pb-6">
+                      <h4 className="text-2xl font-bold text-white mb-2">Sample Reading: Work & Career</h4>
+                      <p className="text-purple-200">For Jamie - Aries Sun, Taurus Rising</p>
+                    </div>
+                    
+                    <div className="prose prose-invert max-w-none">
+                      <div className="text-purple-100 leading-relaxed space-y-4 text-sm">
+                        <p className="italic text-purple-200">
+                          "Hello Jamie, Welcome to your personalized tarot reading. It's a pleasure to connect with you today and explore the theme of work, as you navigate the path that aligns with your professional aspirations and personal growth..."
+                        </p>
+                        
+                        <div className="bg-purple-800/20 rounded-lg p-4 space-y-3">
+                          <h5 className="text-white font-semibold">Card 1: The Present Situation - The Eight of Pentacles</h5>
+                          <p className="text-purple-200 text-sm">
+                            "This card indicates that you are diligently applying yourself, perhaps learning something new or improving upon existing skills. Your passion for growth and achievement is evident..."
+                          </p>
+                        </div>
+                        
+                        <div className="bg-purple-800/20 rounded-lg p-4 space-y-3">
+                          <h5 className="text-white font-semibold">Card 2: The Challenge - The Five of Wands</h5>
+                          <p className="text-purple-200 text-sm">
+                            "This card suggests you may be facing challenges in terms of competition or collaboration with colleagues. However, this serves as an invitation to harness your leadership skills..."
+                          </p>
+                        </div>
+                        
+                        <div className="bg-purple-800/20 rounded-lg p-4 space-y-3">
+                          <h5 className="text-white font-semibold">Card 3: The Outcome - The Star</h5>
+                          <p className="text-purple-200 text-sm">
+                            "The Star suggests that once you navigate through current challenges, you will find renewed purpose and inspiration. Your hard work will lead to clarity and fulfillment..."
+                          </p>
+                        </div>
+                        
+                        <div className="bg-gradient-to-r from-purple-700/30 to-pink-700/30 rounded-lg p-4">
+                          <h5 className="text-white font-semibold mb-2">Summary & Advice</h5>
+                          <p className="text-purple-200 text-sm italic">
+                            "Embrace challenges as opportunities for growth, and trust that your hard work will pave the way for future success. An affirmation to carry with you: 'I am committed to my growth and open to inspiration...'"
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-center pt-6 border-t border-purple-400/30">
+                      <p className="text-purple-200 text-sm">
+                        Each reading includes detailed card interpretations, practical advice, and personalized guidance
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </section>
         )}

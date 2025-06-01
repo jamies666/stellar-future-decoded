@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
@@ -141,8 +140,38 @@ const Index = () => {
   }, []);
 
   const handleSignOut = async () => {
-    console.log("Signing out user...");
-    await supabase.auth.signOut();
+    try {
+      console.log("Starting sign out process...");
+      
+      // Clear local state immediately
+      setUser(null);
+      setHasPaid(false);
+      setUserProfile(null);
+      
+      // Clear localStorage
+      if (user) {
+        localStorage.removeItem(`userProfile_${user.id}`);
+      }
+      localStorage.removeItem('paypal_order_id');
+      localStorage.removeItem('payment_session_token');
+      localStorage.removeItem('payment_user_id');
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Error signing out:", error);
+        toast.error("Failed to sign out. Please try again.");
+        return;
+      }
+      
+      console.log("User successfully signed out");
+      toast.success("Successfully signed out!");
+      
+    } catch (error) {
+      console.error("Unexpected error during sign out:", error);
+      toast.error("An unexpected error occurred. Please try again.");
+    }
   };
 
   const handleUserProfileSubmit = (profileData: any) => {

@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Stars } from "lucide-react";
+import { toast } from "sonner";
 
 interface HeaderProps {
   user: any;
@@ -10,6 +11,16 @@ interface HeaderProps {
 }
 
 const Header = ({ user, onSignIn, onSignOut, testingMode = false }: HeaderProps) => {
+  const handleSignOutClick = async () => {
+    try {
+      console.log("Sign out button clicked");
+      await onSignOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+      toast.error("Failed to sign out. Please try again.");
+    }
+  };
+
   return (
     <header className="p-6 flex justify-between items-center">
       <div className="flex items-center space-x-2">
@@ -23,7 +34,7 @@ const Header = ({ user, onSignIn, onSignOut, testingMode = false }: HeaderProps)
         <div className="flex items-center gap-4">
           <span className="text-white">Welcome, {user.email}</span>
           <Button
-            onClick={onSignOut}
+            onClick={handleSignOutClick}
             variant="outline"
             className="bg-purple-800/30 border-purple-400 text-white hover:bg-purple-700/50"
           >

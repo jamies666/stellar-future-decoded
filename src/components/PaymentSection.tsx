@@ -49,80 +49,14 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
 
       console.log('PayPal order created successfully:', orderData);
 
-      // Redirect to PayPal for payment approval
-      if (orderData.approvalUrl) {
-        // Store order ID and session info for later use
-        localStorage.setItem('paypal_order_id', orderData.orderId);
-        localStorage.setItem('payment_session_token', session.access_token);
-        
-        console.log('Redirecting to PayPal approval URL:', orderData.approvalUrl);
-        
-        // Open PayPal in a new window
-        const paypalWindow = window.open(
-          orderData.approvalUrl,
-          'paypal-payment',
-          'width=600,height=700,scrollbars=yes,resizable=yes'
-        );
-
-        if (!paypalWindow) {
-          throw new Error('Failed to open PayPal payment window. Please allow popups.');
-        }
-
-        // Listen for the payment completion
-        const checkPaymentStatus = setInterval(async () => {
-          if (paypalWindow?.closed) {
-            clearInterval(checkPaymentStatus);
-            
-            // Check if payment was completed by looking at current URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('token');
-            const payerId = urlParams.get('PayerID');
-            
-            console.log('PayPal window closed. URL params:', { token, payerId });
-            
-            if (token && payerId) {
-              // Payment was approved, capture it
-              console.log('Payment approved, proceeding to capture...');
-              await capturePayment(orderData.orderId);
-            } else {
-              console.log('Payment was cancelled or no approval detected');
-              setIsProcessing(false);
-              toast.error("Payment was cancelled or failed");
-              // Clean up stored data
-              localStorage.removeItem('paypal_order_id');
-              localStorage.removeItem('payment_session_token');
-            }
-          }
-        }, 1000);
-
-        // Also set up a message listener for postMessage communication
-        const messageListener = async (event: MessageEvent) => {
-          if (event.origin !== window.location.origin) return;
-          
-          console.log('Received message:', event.data);
-          
-          if (event.data.type === 'PAYPAL_PAYMENT_SUCCESS') {
-            window.removeEventListener('message', messageListener);
-            clearInterval(checkPaymentStatus);
-            console.log('Payment success message received');
-            await capturePayment(orderData.orderId);
-          } else if (event.data.type === 'PAYPAL_PAYMENT_CANCELLED') {
-            window.removeEventListener('message', messageListener);
-            clearInterval(checkPaymentStatus);
-            console.log('Payment cancelled message received');
-            setIsProcessing(false);
-            toast.error("Payment was cancelled");
-            // Clean up stored data
-            localStorage.removeItem('paypal_order_id');
-            localStorage.removeItem('payment_session_token');
-          }
-        };
-
-        window.addEventListener('message', messageListener);
-
-      } else {
-        throw new Error('No approval URL received from PayPal');
-      }
+      // Store order ID for later use
+      localStorage.setItem('paypal_order_id', orderData.orderId);
+      localStorage.setItem('payment_session_token', session.access_token);
+      
+      console.log('Redirecting to PayPal approval URL:', orderData.approvalUrl);
+      
+      // Redirect directly to PayPal instead of opening a popup
+      window.location.href = orderData.approvalUrl;
 
     } catch (error) {
       console.error('Payment error:', error);

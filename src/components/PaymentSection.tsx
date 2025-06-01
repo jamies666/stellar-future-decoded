@@ -23,22 +23,39 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
     try {
       console.log('Starting PayPal payment process...');
 
+      // Check if user is authenticated
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error('Authentication error:', sessionError);
+        throw new Error('Please log in to make a payment');
+      }
+      console.log('User authenticated:', session.user.id);
+
       // Create PayPal order
+      console.log('Calling create-paypal-order function...');
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-paypal-order', {
         body: {}
       });
 
-      if (orderError || !orderData) {
+      if (orderError) {
         console.error('Error creating PayPal order:', orderError);
-        throw new Error('Failed to create PayPal order');
+        throw new Error(`Failed to create PayPal order: ${orderError.message}`);
       }
 
-      console.log('PayPal order created:', orderData);
+      if (!orderData) {
+        console.error('No order data received');
+        throw new Error('No order data received from PayPal');
+      }
+
+      console.log('PayPal order created successfully:', orderData);
 
       // Redirect to PayPal for payment approval
       if (orderData.approvalUrl) {
-        // Store order ID for later use
+        // Store order ID and session info for later use
         localStorage.setItem('paypal_order_id', orderData.orderId);
+        localStorage.setItem('payment_session_token', session.access_token);
+        
+        console.log('Redirecting to PayPal approval URL:', orderData.approvalUrl);
         
         // Open PayPal in a new window
         const paypalWindow = window.open(
@@ -47,21 +64,33 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
           'width=600,height=700,scrollbars=yes,resizable=yes'
         );
 
+        if (!paypalWindow) {
+          throw new Error('Failed to open PayPal payment window. Please allow popups.');
+        }
+
         // Listen for the payment completion
         const checkPaymentStatus = setInterval(async () => {
           if (paypalWindow?.closed) {
             clearInterval(checkPaymentStatus);
             
-            // Check if payment was completed
+            // Check if payment was completed by looking at current URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token');
+            const payerId = urlParams.get('PayerID');
             
-            if (token) {
+            console.log('PayPal window closed. URL params:', { token, payerId });
+            
+            if (token && payerId) {
               // Payment was approved, capture it
+              console.log('Payment approved, proceeding to capture...');
               await capturePayment(orderData.orderId);
             } else {
+              console.log('Payment was cancelled or no approval detected');
               setIsProcessing(false);
               toast.error("Payment was cancelled or failed");
+              // Clean up stored data
+              localStorage.removeItem('paypal_order_id');
+              localStorage.removeItem('payment_session_token');
             }
           }
         }, 1000);
@@ -70,13 +99,22 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
         const messageListener = async (event: MessageEvent) => {
           if (event.origin !== window.location.origin) return;
           
+          console.log('Received message:', event.data);
+          
           if (event.data.type === 'PAYPAL_PAYMENT_SUCCESS') {
             window.removeEventListener('message', messageListener);
+            clearInterval(checkPaymentStatus);
+            console.log('Payment success message received');
             await capturePayment(orderData.orderId);
           } else if (event.data.type === 'PAYPAL_PAYMENT_CANCELLED') {
             window.removeEventListener('message', messageListener);
+            clearInterval(checkPaymentStatus);
+            console.log('Payment cancelled message received');
             setIsProcessing(false);
             toast.error("Payment was cancelled");
+            // Clean up stored data
+            localStorage.removeItem('paypal_order_id');
+            localStorage.removeItem('payment_session_token');
           }
         };
 
@@ -90,35 +128,62 @@ const PaymentSection = ({ onPaymentSuccess }: PaymentSectionProps) => {
       console.error('Payment error:', error);
       setIsProcessing(false);
       toast.error(error instanceof Error ? error.message : "Payment failed");
+      // Clean up stored data on error
+      localStorage.removeItem('paypal_order_id');
+      localStorage.removeItem('payment_session_token');
     }
   };
 
   const capturePayment = async (orderId: string) => {
     try {
-      console.log('Capturing PayPal payment...');
+      console.log('Starting payment capture for order:', orderId);
+
+      // Get fresh session to ensure we have valid token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error('Session error during capture:', sessionError);
+        throw new Error('Authentication expired. Please log in again.');
+      }
+
+      console.log('Session valid for capture. User:', session.user.id);
+      console.log('Calling capture-paypal-payment function...');
 
       const { data: captureData, error: captureError } = await supabase.functions.invoke('capture-paypal-payment', {
         body: { orderId }
       });
 
-      if (captureError || !captureData) {
+      if (captureError) {
         console.error('Error capturing PayPal payment:', captureError);
-        throw new Error('Failed to capture PayPal payment');
+        throw new Error(`Failed to capture PayPal payment: ${captureError.message}`);
       }
 
-      console.log('PayPal payment captured:', captureData);
+      if (!captureData) {
+        console.error('No capture data received');
+        throw new Error('No response received from payment capture');
+      }
+
+      console.log('PayPal payment capture response:', captureData);
 
       if (captureData.success) {
+        console.log('Payment captured successfully');
         toast.success("Payment successful! Your reading access has been activated.");
         onPaymentSuccess();
+        
+        // Clean up stored data
         localStorage.removeItem('paypal_order_id');
+        localStorage.removeItem('payment_session_token');
       } else {
-        throw new Error('Payment capture was not successful');
+        console.error('Payment capture was not successful:', captureData);
+        throw new Error(captureData.message || 'Payment capture was not successful');
       }
 
     } catch (error) {
       console.error('Capture error:', error);
       toast.error(error instanceof Error ? error.message : "Payment capture failed");
+      
+      // Clean up stored data
+      localStorage.removeItem('paypal_order_id');
+      localStorage.removeItem('payment_session_token');
     } finally {
       setIsProcessing(false);
     }

@@ -64,6 +64,7 @@ const Index = () => {
         await checkPaymentStatus(session.user.id);
       }
       
+      // Always set loading to false after getting initial session
       setLoading(false);
     };
 
@@ -74,6 +75,9 @@ const Index = () => {
       async (event, session) => {
         console.log("Auth state changed:", event, "Session:", session);
         setUser(session?.user ?? null);
+        
+        // Ensure loading is set to false on any auth state change
+        setLoading(false);
         
         if (event === 'SIGNED_IN') {
           console.log("User signed in successfully");

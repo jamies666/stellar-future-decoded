@@ -55,38 +55,38 @@ const NumerologyReading = ({ userProfile }: NumerologyReadingProps) => {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-green-900/40 to-teal-900/40 border-green-400/30 backdrop-blur-md">
+      <Card className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 border-amber-400/30 backdrop-blur-md">
         <CardHeader className="text-center">
           <CardTitle className="text-white flex items-center justify-center gap-2">
-            <Calculator className="h-6 w-6 text-green-400" />
+            <Calculator className="h-6 w-6 text-amber-400" />
             Numerology Reading
           </CardTitle>
-          <p className="text-green-200">
+          <p className="text-amber-200">
             Discover the hidden meanings and influences of numbers in your life
           </p>
         </CardHeader>
         
         <CardContent className="space-y-6">
-          <div className="bg-green-800/20 rounded-lg p-4 space-y-2">
+          <div className="bg-amber-800/20 rounded-lg p-4 space-y-2">
             <h4 className="text-white font-semibold">Your Profile:</h4>
-            <p className="text-green-200"><strong>Name:</strong> {userProfile.fullName}</p>
-            <p className="text-green-200"><strong>Birth Date:</strong> {userProfile.birthDate}</p>
+            <p className="text-amber-200"><strong>Name:</strong> {userProfile.fullName}</p>
+            <p className="text-amber-200"><strong>Birth Date:</strong> {userProfile.birthDate}</p>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-3 text-green-200">
+            <div className="flex items-center gap-3 text-amber-200">
               <Star className="h-5 w-5 text-yellow-400" />
               <span>Life Path Number calculation & interpretation</span>
             </div>
-            <div className="flex items-center gap-3 text-green-200">
+            <div className="flex items-center gap-3 text-amber-200">
               <Star className="h-5 w-5 text-yellow-400" />
               <span>Destiny/Expression Number analysis</span>
             </div>
-            <div className="flex items-center gap-3 text-green-200">
+            <div className="flex items-center gap-3 text-amber-200">
               <Star className="h-5 w-5 text-yellow-400" />
               <span>Personal strengths & growth opportunities</span>
             </div>
-            <div className="flex items-center gap-3 text-green-200">
+            <div className="flex items-center gap-3 text-amber-200">
               <Star className="h-5 w-5 text-yellow-400" />
               <span>Practical guidance & affirmations</span>
             </div>
@@ -95,7 +95,7 @@ const NumerologyReading = ({ userProfile }: NumerologyReadingProps) => {
           <Button
             onClick={generateNumerologyReading}
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold py-3"
+            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold py-3"
           >
             {isLoading ? (
               <>
@@ -113,16 +113,16 @@ const NumerologyReading = ({ userProfile }: NumerologyReadingProps) => {
       </Card>
 
       {reading && (
-        <Card className="bg-gradient-to-br from-green-900/40 to-teal-900/40 border-green-400/30 backdrop-blur-md">
+        <Card className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 border-amber-400/30 backdrop-blur-md">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Calculator className="h-6 w-6 text-green-400" />
+              <Calculator className="h-6 w-6 text-amber-400" />
               Your Numerology Reading
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="prose prose-invert max-w-none">
-              <div className="text-green-100 leading-relaxed whitespace-pre-wrap text-sm">
+              <div className="text-amber-100 leading-relaxed whitespace-pre-wrap text-sm">
                 {reading}
               </div>
             </div>

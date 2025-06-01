@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Stars, Moon, Sun, Sparkles, User } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 import UserProfileForm from "@/components/UserProfileForm";
-import PersonalizedReading from "@/components/PersonalizedReading";
+import ReadingSelector from "@/components/ReadingSelector";
 import PaymentSection from "@/components/PaymentSection";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
@@ -175,7 +175,7 @@ const Index = () => {
                 Welcome to Your Cosmic Journey
               </h2>
               <p className="text-xl text-purple-200">
-                Get your personalized tarot reading and discover what the universe has in store for you
+                Get your personalized readings and discover what the universe has in store for you
               </p>
             </div>
 
@@ -218,7 +218,7 @@ const Index = () => {
               </div>
               <div>
                 {canAccessContent() && userProfile && (
-                  <PersonalizedReading userProfile={userProfile} />
+                  <ReadingSelector userProfile={userProfile} />
                 )}
               </div>
             </div>

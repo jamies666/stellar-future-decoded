@@ -32,10 +32,92 @@ serve(async (req) => {
 
     console.log('OpenAI API key found, length:', openAIApiKey.length);
 
-    const { userProfile, isPersonalized } = await req.json();
-    console.log('Request data:', { userProfile, isPersonalized });
+    const { userProfile, isPersonalized, isTarot, tarotTheme, tarotQuestion } = await req.json();
+    console.log('Request data:', { userProfile, isPersonalized, isTarot, tarotTheme, tarotQuestion });
 
-    // Handle personalized reading only
+    // Handle tarot reading
+    if (isTarot && userProfile) {
+      console.log(`Generating tarot reading for ${userProfile.fullName} with theme: ${tarotTheme}`);
+
+      const tarotPrompt = `You are a seasoned tarot expert and spiritual coach, famous for your detailed, insightful, and compassionate readings.  
+The client below is seeking a three-card tarot reading focused on a specific area of life.  
+Please draw and interpret three tarot cards, adapting your reading to the client's chosen theme.
+
+Client's details:  
+- Name: ${userProfile.fullName}
+- Birthdate: ${userProfile.birthDate}
+- Chosen theme: ${tarotTheme}
+${tarotQuestion ? `- Question: ${tarotQuestion}` : ''}
+
+**Your task:**
+1. Begin with a short, warm welcome and introduction, tailored to the client's name and chosen theme.  
+2. Clearly draw three tarot cards for the client, one by one:  
+   - Card 1: The Present Situation  
+   - Card 2: The Challenge/Obstacle  
+   - Card 3: The Likely Outcome/Advice  
+3. For each card:  
+   - Name the card (choose from standard tarot deck: e.g. The Fool, The Lovers, The Tower, etc.)
+   - Describe the traditional meaning of the card.
+   - Give a personal interpretation based on the client's details and their chosen theme.
+4. After interpreting all three cards, give a summary focused on:  
+   - What the cards collectively say about the client's situation in their chosen theme.
+   - Gentle, practical advice for next steps, including a positive affirmation or short action the client can take in this area of life.
+5. Finish with an encouraging, motivational closing that reassures the client and invites them to reflect or take action.
+
+**Important style notes:**  
+- Be positive, honest, and non-fatalistic.
+- Write at least 400–500 words.
+- Make the reading unique and engaging.
+- Do not give medical or financial advice; keep advice general and supportive.
+
+**Begin the reading now, using the client's details.**`;
+
+      console.log('Making OpenAI API request for tarot reading');
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'user',
+              content: tarotPrompt
+            }
+          ],
+          temperature: 0.8,
+          max_tokens: 1000,
+        }),
+      });
+
+      console.log('OpenAI API response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`OpenAI API error: ${response.status} - ${errorText}`);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('OpenAI API response data keys:', Object.keys(data));
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        console.error('Unexpected OpenAI API response structure:', data);
+        throw new Error('Unexpected response structure from OpenAI API');
+      }
+      
+      const reading = data.choices[0].message.content;
+      console.log('Generated tarot reading length:', reading?.length);
+
+      return new Response(JSON.stringify({ reading }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Handle personalized reading
     if (isPersonalized && userProfile) {
       console.log(`Generating personalized reading for ${userProfile.fullName}`);
 
@@ -96,7 +178,6 @@ Begin the reading now, using the client's provided details. Make the message fee
       });
 
       console.log('OpenAI API response status:', response.status);
-      console.log('OpenAI API response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -120,9 +201,9 @@ Begin the reading now, using the client's provided details. Make the message fee
       });
     }
 
-    // If not a personalized reading request, return error
+    // If not a valid reading request, return error
     return new Response(
-      JSON.stringify({ error: 'Only personalized readings are supported' }),
+      JSON.stringify({ error: 'Invalid reading request' }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -73,8 +73,8 @@ export const generateReadingPDF = (data: ReadingData): void => {
     yPosition += 6;
   }
   
-  // Add footer
-  const totalPages = pdf.internal.getNumberOfPages();
+  // Add footer with page numbers
+  const totalPages = pdf.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
     pdf.setFontSize(8);

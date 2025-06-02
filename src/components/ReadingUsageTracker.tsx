@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, CheckCircle, Lock } from "lucide-react";
+import { Clock, CheckCircle, Lock, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface ReadingUsageTrackerProps {
@@ -15,8 +16,9 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
   const [canAccess, setCanAccess] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const checkAccessAndUsage = async () => {
+  const checkAccessAndUsage = async (showToast = false) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -45,6 +47,9 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
       if (!payments || payments.length === 0) {
         console.log('No completed payments found');
         setCanAccess(false);
+        if (showToast) {
+          toast.error('No active payment found. Please complete payment to access readings.');
+        }
         return;
       }
 
@@ -63,12 +68,18 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
           setTimeRemaining(timeLeft);
           setCanAccess(true);
           onUsageUpdate?.(true, timeLeft);
+          if (showToast) {
+            toast.success('Payment verified! Access granted.');
+          }
         } else {
           // Access has expired
           console.log('Access has expired');
           setCanAccess(false);
           setTimeRemaining(null);
           onUsageUpdate?.(false);
+          if (showToast) {
+            toast.error('Your 2-hour access window has expired.');
+          }
         }
       } else {
         // First time accessing - grant 2-hour access window
@@ -93,20 +104,58 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
         setTimeRemaining(2 * 60 * 60); // 2 hours in seconds
         setCanAccess(true);
         onUsageUpdate?.(true, 2 * 60 * 60);
-        toast.success('2-hour access window activated!');
+        toast.success('Payment verified! 2-hour access window activated!');
       }
     } catch (error) {
       console.error('Error in checkAccessAndUsage:', error);
       setCanAccess(false);
-    } finally {
-      setIsLoading(false);
+      if (showToast) {
+        toast.error('Error checking payment status. Please try again.');
+      }
     }
+  };
+
+  const handleRefreshPaymentStatus = async () => {
+    setIsRefreshing(true);
+    await checkAccessAndUsage(true);
+    setIsRefreshing(false);
   };
 
   useEffect(() => {
     console.log('ReadingUsageTracker mounted for type:', readingType);
-    checkAccessAndUsage();
+    
+    const initCheck = async () => {
+      await checkAccessAndUsage();
+      setIsLoading(false);
+    };
+    
+    initCheck();
+
+    // Check for URL parameters that indicate returning from payment
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const paymentId = urlParams.get('paymentId');
+    
+    if (token || paymentId) {
+      console.log('Detected return from payment, refreshing status...');
+      // Small delay to allow payment processing to complete
+      setTimeout(() => {
+        checkAccessAndUsage(true);
+      }, 2000);
+    }
   }, [readingType]);
+
+  // Auto-refresh every 30 seconds to catch payment updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!canAccess) {
+        console.log('Auto-refreshing payment status...');
+        checkAccessAndUsage();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [canAccess]);
 
   // Update time remaining every minute
   useEffect(() => {
@@ -155,16 +204,33 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
         <CardHeader className="text-center">
           <CardTitle className="text-white flex items-center justify-center gap-2">
             <Lock className="h-6 w-6 text-red-400" />
-            Access Expired
+            Access Required
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <p className="text-red-200">
-            Your 2-hour access window has expired.
+            Please complete payment to access your personalized readings.
           </p>
           <p className="text-purple-200 text-sm">
-            Please purchase a new reading to get another 2-hour session.
+            If you've just completed payment, click the refresh button below.
           </p>
+          <Button
+            onClick={handleRefreshPaymentStatus}
+            disabled={isRefreshing}
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+          >
+            {isRefreshing ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Checking Payment...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Payment Status
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
     );
@@ -175,11 +241,26 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
       {timeRemaining && (
         <Card className="bg-gradient-to-br from-green-900/40 to-purple-900/40 border-green-400/30 backdrop-blur-md">
           <CardContent className="p-4">
-            <div className="flex items-center justify-center gap-2 text-green-200">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm">
-                Access expires in: {formatTimeRemaining(timeRemaining)}
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-green-200">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm">
+                  Access expires in: {formatTimeRemaining(timeRemaining)}
+                </span>
+              </div>
+              <Button
+                onClick={handleRefreshPaymentStatus}
+                disabled={isRefreshing}
+                variant="ghost"
+                size="sm"
+                className="text-green-200 hover:text-green-100"
+              >
+                {isRefreshing ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>

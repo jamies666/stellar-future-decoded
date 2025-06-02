@@ -86,10 +86,15 @@ const PaymentSuccess = () => {
           localStorage.removeItem('payment_session_token');
           localStorage.removeItem('payment_user_id');
           
-          // Redirect to home after 2 seconds to give user time to see success message
+          // Add payment confirmation to URL for the reading page to detect
+          const returnUrl = new URL(window.location.origin);
+          returnUrl.searchParams.set('payment_completed', 'true');
+          returnUrl.searchParams.set('order_id', token);
+          
+          // Redirect to home after 3 seconds to give user time to see success message
           setTimeout(() => {
-            navigate('/', { replace: true });
-          }, 2000);
+            window.location.href = returnUrl.toString();
+          }, 3000);
         } else {
           console.error('Payment capture was not successful:', captureData);
           throw new Error(captureData.message || 'Payment capture was not successful');
@@ -113,7 +118,10 @@ const PaymentSuccess = () => {
   }, [searchParams, navigate]);
 
   const handleReturnHome = () => {
-    navigate('/', { replace: true });
+    // Add payment completion indicator to URL
+    const returnUrl = new URL(window.location.origin);
+    returnUrl.searchParams.set('payment_completed', 'true');
+    window.location.href = returnUrl.toString();
   };
 
   if (paymentStatus === 'processing') {
@@ -129,6 +137,9 @@ const PaymentSuccess = () => {
           <CardContent className="text-center">
             <p className="text-purple-200 mb-4">
               Please wait while we confirm your payment...
+            </p>
+            <p className="text-purple-300 text-sm">
+              This usually takes just a few seconds.
             </p>
           </CardContent>
         </Card>
@@ -148,7 +159,7 @@ const PaymentSuccess = () => {
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-green-200">
-              Your payment has been processed successfully. You now have access to personalized readings!
+              Your payment has been processed successfully. You now have 2 hours of access to personalized readings!
             </p>
             <p className="text-purple-200 text-sm">
               Redirecting you back to get your reading...
@@ -173,7 +184,7 @@ const PaymentSuccess = () => {
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <p className="text-red-200">
-            There was an issue processing your payment. Please try again.
+            There was an issue processing your payment. Please try again or contact support if the problem persists.
           </p>
           <Button
             onClick={handleReturnHome}
@@ -183,8 +194,8 @@ const PaymentSuccess = () => {
           </Button>
         </CardContent>
       </Card>
-    </div>
-  );
+    );
+  }
 };
 
 export default PaymentSuccess;

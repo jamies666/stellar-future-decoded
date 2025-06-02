@@ -27,7 +27,7 @@ const Index = () => {
     try {
       console.log('Checking payment status for user:', userId);
       
-      // Query the payments table to check for completed payments
+      // Query the payments table to check for completed payments with valid access
       const { data: payments, error } = await supabase
         .from('payments')
         .select('*')
@@ -42,12 +42,29 @@ const Index = () => {
         return;
       }
 
-      const hasCompletedPayment = payments && payments.length > 0;
-      console.log('Payment status checked:', hasCompletedPayment, 'Payments found:', payments);
-      setHasPaid(hasCompletedPayment);
+      if (!payments || payments.length === 0) {
+        console.log('No completed payments found');
+        setHasPaid(false);
+        return;
+      }
+
+      const payment = payments[0];
+      const now = new Date();
+
+      // Check if this is a valid payment (either no access granted yet, or access is still valid)
+      let hasValidAccess = true;
+
+      if (payment.access_expires_at) {
+        const expiresAt = new Date(payment.access_expires_at);
+        hasValidAccess = now < expiresAt;
+        console.log('Access expires at:', expiresAt, 'Still valid:', hasValidAccess);
+      }
+
+      console.log('Payment status checked:', hasValidAccess, 'Payment found:', payment);
+      setHasPaid(hasValidAccess);
       
       // If payment is found, also check if we have a stored user profile
-      if (hasCompletedPayment) {
+      if (hasValidAccess) {
         const storedProfile = localStorage.getItem(`userProfile_${userId}`);
         if (storedProfile) {
           try {

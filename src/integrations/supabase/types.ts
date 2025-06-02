@@ -11,32 +11,41 @@ export type Database = {
     Tables: {
       payments: {
         Row: {
+          access_expires_at: string | null
+          access_granted_at: string | null
           amount: number | null
           created_at: string
           currency: string | null
           id: number
           paypal_capture_data: Json | null
           paypal_order_id: string | null
+          readings_used: Json | null
           status: string | null
           user_id: string | null
         }
         Insert: {
+          access_expires_at?: string | null
+          access_granted_at?: string | null
           amount?: number | null
           created_at?: string
           currency?: string | null
           id?: number
           paypal_capture_data?: Json | null
           paypal_order_id?: string | null
+          readings_used?: Json | null
           status?: string | null
           user_id?: string | null
         }
         Update: {
+          access_expires_at?: string | null
+          access_granted_at?: string | null
           amount?: number | null
           created_at?: string
           currency?: string | null
           id?: number
           paypal_capture_data?: Json | null
           paypal_order_id?: string | null
+          readings_used?: Json | null
           status?: string | null
           user_id?: string | null
         }

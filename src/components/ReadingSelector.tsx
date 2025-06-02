@@ -7,6 +7,7 @@ import { Stars, Sparkles, User, Calculator } from "lucide-react";
 import PersonalizedReading from "./PersonalizedReading";
 import TarotReading from "./TarotReading";
 import NumerologyReading from "./NumerologyReading";
+import ReadingUsageTracker from "./ReadingUsageTracker";
 
 interface ReadingSelectorProps {
   userProfile: {
@@ -29,6 +30,9 @@ const ReadingSelector = ({ userProfile }: ReadingSelectorProps) => {
           </CardTitle>
           <p className="text-purple-200">
             Select the type of cosmic guidance you'd like to receive
+          </p>
+          <p className="text-yellow-300 text-sm font-semibold">
+            ⏰ You have 2 hours to complete your readings after first access
           </p>
         </CardHeader>
       </Card>
@@ -59,15 +63,21 @@ const ReadingSelector = ({ userProfile }: ReadingSelectorProps) => {
         </TabsList>
         
         <TabsContent value="personalized" className="mt-6">
-          <PersonalizedReading userProfile={userProfile} />
+          <ReadingUsageTracker readingType="horoscope">
+            <PersonalizedReading userProfile={userProfile} />
+          </ReadingUsageTracker>
         </TabsContent>
         
         <TabsContent value="tarot" className="mt-6">
-          <TarotReading userProfile={userProfile} />
+          <ReadingUsageTracker readingType="tarot">
+            <TarotReading userProfile={userProfile} />
+          </ReadingUsageTracker>
         </TabsContent>
         
         <TabsContent value="numerology" className="mt-6">
-          <NumerologyReading userProfile={userProfile} />
+          <ReadingUsageTracker readingType="numerology">
+            <NumerologyReading userProfile={userProfile} />
+          </ReadingUsageTracker>
         </TabsContent>
       </Tabs>
     </div>

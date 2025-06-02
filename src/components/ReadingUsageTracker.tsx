@@ -5,12 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, CheckCircle, Lock } from "lucide-react";
 import { toast } from "sonner";
 
-interface ReadingUsage {
-  tarot: boolean;
-  numerology: boolean;
-  horoscope: boolean;
-}
-
 interface ReadingUsageTrackerProps {
   children: React.ReactNode;
   readingType: 'tarot' | 'numerology' | 'horoscope';

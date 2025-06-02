@@ -12,9 +12,10 @@ interface PersonalizedReadingProps {
     birthDate: string;
     birthPlace: string;
   };
+  onReadingComplete?: () => void;
 }
 
-const PersonalizedReading = ({ userProfile }: PersonalizedReadingProps) => {
+const PersonalizedReading = ({ userProfile, onReadingComplete }: PersonalizedReadingProps) => {
   const [reading, setReading] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -40,6 +41,11 @@ const PersonalizedReading = ({ userProfile }: PersonalizedReadingProps) => {
       console.log('Received reading data:', data);
       setReading(data.reading);
       setHasGenerated(true);
+      
+      // Mark reading as used after successful generation
+      if (onReadingComplete) {
+        onReadingComplete();
+      }
     } catch (error) {
       console.error('Error generating reading:', error);
       toast.error('Failed to generate your reading. Please try again.');

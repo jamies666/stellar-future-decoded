@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, CheckCircle, Lock } from "lucide-react";
@@ -68,6 +68,7 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
           const hasUsedThisReading = readingsUsed[readingType] || false;
           
           setReadingUsed(hasUsedThisReading);
+          // Allow access if reading hasn't been used yet
           setCanAccess(!hasUsedThisReading);
           onUsageUpdate?.(!hasUsedThisReading, timeLeft);
         } else {
@@ -241,6 +242,11 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
     );
   }
 
+  // Clone the children and pass the markReadingAsUsed function
+  const childrenWithProps = React.cloneElement(children as React.ReactElement, {
+    onReadingComplete: markReadingAsUsed
+  });
+
   return (
     <div className="space-y-4">
       {timeRemaining && (
@@ -256,9 +262,7 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
         </Card>
       )}
       
-      <div onClick={markReadingAsUsed}>
-        {children}
-      </div>
+      {childrenWithProps}
     </div>
   );
 };

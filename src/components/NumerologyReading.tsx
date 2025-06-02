@@ -12,9 +12,10 @@ interface NumerologyReadingProps {
     birthDate: string;
     birthPlace: string;
   };
+  onReadingComplete?: () => void;
 }
 
-const NumerologyReading = ({ userProfile }: NumerologyReadingProps) => {
+const NumerologyReading = ({ userProfile, onReadingComplete }: NumerologyReadingProps) => {
   const [reading, setReading] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,6 +45,11 @@ const NumerologyReading = ({ userProfile }: NumerologyReadingProps) => {
 
       setReading(data.reading);
       toast.success("Your numerology reading is ready!");
+      
+      // Mark reading as used after successful generation
+      if (onReadingComplete) {
+        onReadingComplete();
+      }
     } catch (error) {
       console.error("Error generating numerology reading:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to generate reading";

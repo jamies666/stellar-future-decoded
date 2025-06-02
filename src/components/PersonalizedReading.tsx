@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,10 +11,9 @@ interface PersonalizedReadingProps {
     birthDate: string;
     birthPlace: string;
   };
-  onReadingComplete?: () => void;
 }
 
-const PersonalizedReading = ({ userProfile, onReadingComplete }: PersonalizedReadingProps) => {
+const PersonalizedReading = ({ userProfile }: PersonalizedReadingProps) => {
   const [reading, setReading] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -41,11 +39,6 @@ const PersonalizedReading = ({ userProfile, onReadingComplete }: PersonalizedRea
       console.log('Received reading data:', data);
       setReading(data.reading);
       setHasGenerated(true);
-      
-      // Mark reading as used after successful generation
-      if (onReadingComplete) {
-        onReadingComplete();
-      }
     } catch (error) {
       console.error('Error generating reading:', error);
       toast.error('Failed to generate your reading. Please try again.');

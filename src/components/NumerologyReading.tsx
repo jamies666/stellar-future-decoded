@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,10 +11,9 @@ interface NumerologyReadingProps {
     birthDate: string;
     birthPlace: string;
   };
-  onReadingComplete?: () => void;
 }
 
-const NumerologyReading = ({ userProfile, onReadingComplete }: NumerologyReadingProps) => {
+const NumerologyReading = ({ userProfile }: NumerologyReadingProps) => {
   const [reading, setReading] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,11 +43,6 @@ const NumerologyReading = ({ userProfile, onReadingComplete }: NumerologyReading
 
       setReading(data.reading);
       toast.success("Your numerology reading is ready!");
-      
-      // Mark reading as used after successful generation
-      if (onReadingComplete) {
-        onReadingComplete();
-      }
     } catch (error) {
       console.error("Error generating numerology reading:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to generate reading";

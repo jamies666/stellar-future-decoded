@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Stars, Download, Mail, Sparkles } from "lucide-react";
+import { Stars, Download, Mail, Sparkles, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { generateReadingPDF } from "@/utils/pdfGenerator";
 
 interface TarotReadingProps {
   userProfile: {
@@ -73,7 +74,24 @@ const TarotReading = ({ userProfile }: TarotReadingProps) => {
   };
 
   const handleDownloadPDF = () => {
-    toast.success("Downloading your tarot reading PDF...");
+    if (!reading) {
+      toast.error("No reading available to download");
+      return;
+    }
+
+    try {
+      generateReadingPDF({
+        type: 'tarot',
+        title: 'Your Personal Tarot Reading',
+        content: reading,
+        userProfile,
+        theme: themes.find(t => t.value === selectedTheme)?.label
+      });
+      toast.success("Your tarot reading PDF is being downloaded!");
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error("Failed to generate PDF. Please try again.");
+    }
   };
 
   if (isGenerating) {
@@ -131,7 +149,7 @@ const TarotReading = ({ userProfile }: TarotReadingProps) => {
             variant="outline"
             className="flex-1 border-purple-400 text-white hover:bg-purple-900/50"
           >
-            <Download className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             Download PDF
           </Button>
         </div>

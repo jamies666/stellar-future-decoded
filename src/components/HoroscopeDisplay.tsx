@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Stars, Heart, DollarSign, Briefcase, Download, Mail } from "lucide-react";
+import { Stars, Heart, DollarSign, Briefcase, Download, Mail, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { generateReadingPDF } from "@/utils/pdfGenerator";
 
 interface HoroscopeDisplayProps {
   zodiacSign: string;
@@ -49,7 +50,38 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
   };
 
   const handleDownloadPDF = () => {
-    toast.success("Downloading your personalized horoscope PDF...");
+    if (!horoscope) {
+      toast.error("No horoscope available to download");
+      return;
+    }
+
+    try {
+      // Combine all horoscope sections into one content string
+      const fullContent = `
+GENERAL FORECAST:
+${horoscope.general || 'No general forecast available.'}
+
+LOVE & RELATIONSHIPS:
+${horoscope.love || 'No love forecast available.'}
+
+CAREER & PROFESSIONAL LIFE:
+${horoscope.career || 'No career forecast available.'}
+
+FINANCIAL OUTLOOK:
+${horoscope.finances || 'No financial forecast available.'}
+      `.trim();
+
+      generateReadingPDF({
+        type: 'horoscope',
+        title: `Your ${zodiacSign} Horoscope`,
+        content: fullContent,
+        zodiacSign
+      });
+      toast.success("Your horoscope PDF is being downloaded!");
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error("Failed to generate PDF. Please try again.");
+    }
   };
 
   if (isGenerating) {
@@ -159,7 +191,7 @@ const HoroscopeDisplay = ({ zodiacSign }: HoroscopeDisplayProps) => {
           variant="outline"
           className="flex-1 border-purple-400 text-white hover:bg-purple-900/50"
         >
-          <Download className="mr-2 h-4 w-4" />
+          <FileText className="mr-2 h-4 w-4" />
           Download PDF
         </Button>
       </div>

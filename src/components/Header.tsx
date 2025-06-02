@@ -25,7 +25,7 @@ const Header = ({ user, onSignIn, onSignOut, testingMode = false }: HeaderProps)
     <header className="p-6 flex justify-between items-center">
       <div className="flex items-center space-x-2">
         <Stars className="h-8 w-8 text-yellow-400" />
-        <h1 className="text-2xl font-bold text-white">Cosmic Insights</h1>
+        <h1 className="text-2xl font-bold text-white">My Tarot and Horoscope</h1>
         {testingMode && (
           <span className="text-xs bg-red-500 text-white px-2 py-1 rounded">TESTING MODE</span>
         )}

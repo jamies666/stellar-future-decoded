@@ -62,7 +62,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-8 py-4 text-lg rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 animate-pulse"
         >
           <Sparkles className="mr-2 h-5 w-5" />
-          Get My Double Reading Now - $1.99
+          Get My Triple Reading Now - $1.99
         </Button>
         
         <p className="text-sm text-purple-400 mt-4">

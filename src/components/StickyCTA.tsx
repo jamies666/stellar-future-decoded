@@ -21,7 +21,7 @@ const StickyCTA = ({ onGetStarted }: StickyCTAProps) => {
           className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 text-sm rounded-full shadow-lg animate-pulse"
         >
           <Sparkles className="mr-2 h-4 w-4" />
-          Get My Double Reading Now
+          Get My Triple Reading Now
         </Button>
       </div>
     </div>

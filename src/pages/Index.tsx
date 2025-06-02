@@ -9,6 +9,9 @@ import HeroSection from "@/components/HeroSection";
 import ExampleReading from "@/components/ExampleReading";
 import FeaturesSection from "@/components/FeaturesSection";
 import UserDashboard from "@/components/UserDashboard";
+import StickyCTA from "@/components/StickyCTA";
+import TestimonialSection from "@/components/TestimonialSection";
+import FAQSection from "@/components/FAQSection";
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -228,13 +231,22 @@ const Index = () => {
           testingMode={TESTING_MODE}
         />
 
-        {/* Hero Section */}
+        {/* Hero Section with SEO optimization */}
         {!user && (
           <HeroSection onGetStarted={() => setIsAuthModalOpen(true)} />
         )}
 
         {/* Example Reading Section */}
         {!user && <ExampleReading />}
+
+        {/* Features Section with enhanced copy */}
+        {!user && <FeaturesSection />}
+
+        {/* Testimonials Section */}
+        {!user && <TestimonialSection />}
+
+        {/* FAQ Section */}
+        {!user && <FAQSection />}
 
         {/* Logged in experience */}
         {user && (
@@ -248,8 +260,13 @@ const Index = () => {
           />
         )}
 
-        {/* Features Section */}
-        {!user && <FeaturesSection />}
+        {/* Sticky CTA for mobile */}
+        {!user && (
+          <StickyCTA onGetStarted={() => setIsAuthModalOpen(true)} />
+        )}
+
+        {/* Bottom padding for mobile sticky CTA */}
+        {!user && <div className="h-20 md:h-0" />}
       </div>
 
       <AuthModal 

@@ -26,7 +26,13 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
   const checkAccessAndUsage = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.log('No session found');
+        setCanAccess(false);
+        return;
+      }
+
+      console.log('Checking payment for user:', session.user.id);
 
       // Get the most recent completed payment for this user
       const { data: payments, error } = await supabase
@@ -39,21 +45,25 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
 
       if (error) {
         console.error('Error checking payment:', error);
+        setCanAccess(false);
         return;
       }
 
       if (!payments || payments.length === 0) {
+        console.log('No completed payments found');
         setCanAccess(false);
         return;
       }
 
       const payment = payments[0];
+      console.log('Found payment:', payment);
       const now = new Date();
 
       // Check if access has been granted and is still valid
       if (payment.access_granted_at && payment.access_expires_at) {
         const expiresAt = new Date(payment.access_expires_at);
         const isStillValid = now < expiresAt;
+        console.log('Access expires at:', expiresAt, 'Still valid:', isStillValid);
 
         if (isStillValid) {
           const timeLeft = Math.floor((expiresAt.getTime() - now.getTime()) / 1000);
@@ -65,20 +75,30 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
             numerology: false,
             horoscope: false
           };
+          
+          console.log('Readings used:', readingsUsed);
+          console.log('Current reading type:', readingType);
+          
           const hasUsedThisReading = readingsUsed[readingType] || false;
+          console.log('Has used this reading:', hasUsedThisReading);
           
           setReadingUsed(hasUsedThisReading);
           // Allow access if reading hasn't been used yet
-          setCanAccess(!hasUsedThisReading);
-          onUsageUpdate?.(!hasUsedThisReading, timeLeft);
+          const canAccessReading = !hasUsedThisReading;
+          console.log('Can access reading:', canAccessReading);
+          
+          setCanAccess(canAccessReading);
+          onUsageUpdate?.(canAccessReading, timeLeft);
         } else {
           // Access has expired
+          console.log('Access has expired');
           setCanAccess(false);
           setTimeRemaining(null);
           onUsageUpdate?.(false);
         }
       } else {
         // First time accessing - grant 2-hour access window
+        console.log('First time access, granting 2-hour window');
         const accessGrantedAt = now.toISOString();
         const accessExpiresAt = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(); // 2 hours from now
 
@@ -104,15 +124,20 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
       }
     } catch (error) {
       console.error('Error in checkAccessAndUsage:', error);
+      setCanAccess(false);
     } finally {
       setIsLoading(false);
     }
   };
 
   const markReadingAsUsed = async () => {
+    console.log('Marking reading as used for type:', readingType);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.log('No session when marking reading as used');
+        return;
+      }
 
       // Get the current payment record
       const { data: payments, error: fetchError } = await supabase
@@ -135,11 +160,15 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
         horoscope: false
       };
 
+      console.log('Current readings before update:', currentReadings);
+
       // Mark this reading type as used
       const updatedReadings = {
         ...currentReadings,
         [readingType]: true
       };
+
+      console.log('Updated readings:', updatedReadings);
 
       const { error: updateError } = await supabase
         .from('payments')
@@ -156,13 +185,14 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
       setReadingUsed(true);
       setCanAccess(false);
       onUsageUpdate?.(false, timeRemaining);
-      console.log(`${readingType} reading marked as used`);
+      console.log(`${readingType} reading marked as used successfully`);
     } catch (error) {
       console.error('Error marking reading as used:', error);
     }
   };
 
   useEffect(() => {
+    console.log('ReadingUsageTracker mounted for type:', readingType);
     checkAccessAndUsage();
   }, [readingType]);
 
@@ -189,6 +219,14 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
   };
+
+  console.log('ReadingUsageTracker render state:', {
+    isLoading,
+    canAccess,
+    readingUsed,
+    timeRemaining,
+    readingType
+  });
 
   if (isLoading) {
     return (

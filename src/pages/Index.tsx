@@ -12,6 +12,7 @@ import UserDashboard from "@/components/UserDashboard";
 import StickyCTA from "@/components/StickyCTA";
 import TestimonialSection from "@/components/TestimonialSection";
 import FAQSection from "@/components/FAQSection";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -276,6 +277,9 @@ const Index = () => {
             onEditProfile={() => setUserProfile(null)}
           />
         )}
+
+        {/* Footer with disclaimer */}
+        <Footer />
 
         {/* Sticky CTA for mobile */}
         {!user && (

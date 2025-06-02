@@ -194,8 +194,8 @@ const PaymentSuccess = () => {
           </Button>
         </CardContent>
       </Card>
-    );
-  }
+    </div>
+  );
 };
 
 export default PaymentSuccess;

@@ -60,7 +60,7 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
           setTimeRemaining(timeLeft);
           
           // Check if this specific reading type has been used
-          const readingsUsed = (payment.readings_used as ReadingUsage) || {
+          const readingsUsed = (payment.readings_used as unknown as ReadingUsage) || {
             tarot: false,
             numerology: false,
             horoscope: false
@@ -128,7 +128,7 @@ const ReadingUsageTracker = ({ children, readingType, onUsageUpdate }: ReadingUs
       }
 
       const payment = payments[0];
-      const currentReadings = (payment.readings_used as ReadingUsage) || {
+      const currentReadings = (payment.readings_used as unknown as ReadingUsage) || {
         tarot: false,
         numerology: false,
         horoscope: false

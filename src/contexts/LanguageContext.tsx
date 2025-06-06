@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Language = 'nl' | 'en';
@@ -25,7 +24,7 @@ const translations = {
     heroSubtitle: "Ontsluit je lot met professionele astrologie & horoscoop inzichten - gepersonaliseerde tarotkaarten lezing",
     heroSubtitlePlus: " PLUS ",
     heroSubtitleEnd: "gedetailleerd numerologie rapport dat je kosmische blauwdruk onthult.",
-    heroDescription: "Ontdek wat het universum heeft gepland voor je liefdesleven, carrièresucces en financiële toekomst. Oude wijsheid ontmoet AI-precisie - allemaal speciaal afgestemd op je horoscoopvoorspelling.",
+    heroDescription: "Ontdek wat het universum heeft gepland voor je liefdesleven, carrièresucces en financiële toekomst. Eeuwenoude wijsheid gecombineerd met moderne inzichten - allemaal speciaal afgestemd op je horoscoopvoorspelling.",
     limitedTime: "BEPERKTE TIJD: Slechts €1,99 (Normaal €19,99)",
     instantDelivery: "Directe Levering",
     confidential: "100% Vertrouwelijk",
@@ -90,7 +89,7 @@ const translations = {
     heroSubtitle: "Unlock your destiny with professional astrology & horoscope insights - personalized tarot cards reading",
     heroSubtitlePlus: " PLUS ",
     heroSubtitleEnd: "detailed numerology report revealing your cosmic blueprint.",
-    heroDescription: "Discover what the universe has planned for your love life, career success, and financial future. Ancient wisdom meets AI precision - all tailored specifically to your zodiac forecast.",
+    heroDescription: "Discover what the universe has planned for your love life, career success, and financial future. Ancient wisdom combined with modern insights - all tailored specifically to your zodiac forecast.",
     limitedTime: "LIMITED TIME: Only $1.99 (Reg. $19.99)",
     instantDelivery: "Instant Delivery",
     confidential: "100% Confidential",

@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -31,14 +32,21 @@ serve(async (req) => {
 
     console.log('OpenAI API key found, length:', openAIApiKey.length);
 
-    const { userProfile, isPersonalized, isTarot, isNumerology, tarotTheme, tarotQuestion } = await req.json();
-    console.log('Request data:', { userProfile, isPersonalized, isTarot, isNumerology, tarotTheme, tarotQuestion });
+    const { userProfile, isPersonalized, isTarot, isNumerology, tarotTheme, tarotQuestion, language = 'nl' } = await req.json();
+    console.log('Request data:', { userProfile, isPersonalized, isTarot, isNumerology, tarotTheme, tarotQuestion, language });
+
+    // Determine language instruction for OpenAI
+    const languageInstruction = language === 'nl' 
+      ? 'Please respond in Dutch (Nederlands). All content should be in the Dutch language.'
+      : 'Please respond in English.';
 
     // Handle numerology reading
     if (isNumerology && userProfile) {
-      console.log(`Generating numerology reading for ${userProfile.fullName}`);
+      console.log(`Generating numerology reading for ${userProfile.fullName} in ${language}`);
 
-      const numerologyPrompt = `You are an expert numerologist, skilled in interpreting the meaning and influence of numbers in a person's life.  
+      const numerologyPrompt = `${languageInstruction}
+
+You are an expert numerologist, skilled in interpreting the meaning and influence of numbers in a person's life.  
 The client below has provided their date of birth ${userProfile.birthDate} and their full name ${userProfile.fullName}.
 
 Please generate a comprehensive, unique numerology reading that is personal, easy to understand, and insightful.  
@@ -115,9 +123,11 @@ Begin the numerology reading now using the client's details. Make the response a
 
     // Handle tarot reading
     if (isTarot && userProfile) {
-      console.log(`Generating tarot reading for ${userProfile.fullName} with theme: ${tarotTheme}`);
+      console.log(`Generating tarot reading for ${userProfile.fullName} with theme: ${tarotTheme} in ${language}`);
 
-      const tarotPrompt = `You are a seasoned tarot expert and spiritual coach, famous for your detailed, insightful, and compassionate readings.  
+      const tarotPrompt = `${languageInstruction}
+
+You are a seasoned tarot expert and spiritual coach, famous for your detailed, insightful, and compassionate readings.  
 The client below is seeking a three-card tarot reading focused on a specific area of life.  
 Please draw and interpret three tarot cards, adapting your reading to the client's chosen theme.
 
@@ -197,9 +207,11 @@ ${tarotQuestion ? `- Question: ${tarotQuestion}` : ''}
 
     // Handle personalized reading
     if (isPersonalized && userProfile) {
-      console.log(`Generating personalized reading for ${userProfile.fullName}`);
+      console.log(`Generating personalized reading for ${userProfile.fullName} in ${language}`);
 
-      const personalizedPrompt = `You are a renowned tarot reader, spiritual guide, and manifestation coach with deep knowledge of both Western and esoteric traditions.  
+      const personalizedPrompt = `${languageInstruction}
+
+You are a renowned tarot reader, spiritual guide, and manifestation coach with deep knowledge of both Western and esoteric traditions.  
 Your style is empathetic, practical, insightful, and always tailored to the individual.
 
 A client has provided their full name, exact date of birth, and place of birth:  

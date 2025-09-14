@@ -10,7 +10,7 @@ class RevenueCatService {
       // Initialize RevenueCat with your API key
       await Purchases.setLogLevel({ level: 'DEBUG' as any });
       await Purchases.configure({
-        apiKey: 'your_revenuecat_api_key_here', // Replace with actual key
+        apiKey: 'sk_BuMJfDvsjOyIUAZQDZWHEDazpOVCh',
       });
       
       this.isInitialized = true;

@@ -24,6 +24,7 @@ class RevenueCatService {
   async getOfferings(): Promise<PurchasesOffering[]> {
     try {
       const offerings = await Purchases.getOfferings();
+      console.log('RevenueCat offerings:', offerings);
       return offerings.all ? Object.values(offerings.all) : [];
     } catch (error) {
       console.error('Failed to get offerings:', error);
